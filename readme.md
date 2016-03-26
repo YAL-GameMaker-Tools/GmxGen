@@ -52,7 +52,7 @@ Expression will be taken "as-is", so use parenthesis, if you must.
 ### C++ (DLL, DyLib, SO)
 For the C++ binaries, a .cpp file (named same as the binary file) should be lying next to the binary file. It doesn't have to be valid C++ (just have the definitions in the right format), so you can safely concat multiple files into a single one if needed.
 
-**Function definitions:*
+**Function definitions:**
 ```
 #!cpp
 /// Description
@@ -69,6 +69,7 @@ Description-line is optional;
 ```
 
 **Macros definitions:**
+
 You can use the same syntax as for GML/JS, or hint C++ macro definitions for constants:
 ```
 #!cpp
