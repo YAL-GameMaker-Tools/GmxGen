@@ -80,8 +80,8 @@ In this case, the documentation line (even if blank) is required, to avoid expor
 ## Author and license
 Author: Vadim "YellowAfterlife" Dyachenko
 
-License: License: GNU GPL v3 https://www.gnu.org/licenses/gpl-3.0
+License: GNU GPL v3 https://www.gnu.org/licenses/gpl-3.0
 
 - - -
 
-Have fun_!_
+Have fun*!*
