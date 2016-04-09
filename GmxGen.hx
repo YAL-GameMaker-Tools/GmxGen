@@ -115,6 +115,7 @@ class GmxGen {
 		addText(funNode, lb0);
 	}
 	
+	static var appliedTo:Map<String, Bool>;
 	static function apply(basePath:String, fileNode:Xml, ?fileName:String) {
 		if (fileName == null) fileName = xmlRead(xmlFind(fileNode, "filename"));
 		var filePath:String = basePath + "/" + fileName;
@@ -141,7 +142,12 @@ class GmxGen {
 			Sys.println(Std.string(error));
 			return;
 		}
+		//
 		Sys.println("Indexing " + filePath + "...");
+		var dup:Bool = false;
+		if (appliedTo[filePath]) {
+			dup = true;
+		} else appliedTo[filePath] = true;
 		//
 		var nextPos_ofs;
 		inline function nextPos(rx:EReg):Int {
@@ -198,7 +204,7 @@ class GmxGen {
 			case "dll", "dylib", "so": {
 				// `/// doc` [optional]
 				// `dllx type func(type arg1, type arg2)`
-				var rxFunc = ~/(\/\/\/ *([^\n]+)\n)?\s*dllx\s+(double|char *\*)\s+([\w_]+)\(([^\)]*)\)/g;
+				var rxFunc = ~/(\/\/\/ *([^\n]*)\n)?\s*dllx\s+(double|char *\*)\s+([\w_]+)\(([^\)]*)\)/g;
 				var rxArg = ~/(double|char *\*)\s+([\w_]+)/g;
 				codePos = 0;
 				while (rxFunc.matchSub(code, codePos)) {
@@ -214,7 +220,7 @@ class GmxGen {
 					}
 					addFunc(extFuncs, {
 						name: rxFunc.matched(4),
-						doc: rxFunc.matched(2),
+						doc: dup ? null : rxFunc.matched(2),
 						ret: rxFunc.matched(3) == "double" ? 2 : 1,
 						argc: args.length,
 						args: args,
@@ -225,7 +231,8 @@ class GmxGen {
 				var rxConst = ~/\/\/\/\s*([^\n]*)\n\s*#define\s+([\w_]+)\s+([^\n]+)\n/g;
 				codePos = 0;
 				while (rxConst.matchSub(code, codePos)) {
-					addMacro(extMacro, rxConst.matched(2), rxConst.matched(3), rxConst.matched(1));
+					addMacro(extMacro, rxConst.matched(2), rxConst.matched(3),
+						dup ? null : rxConst.matched(1));
 					codePos = nextPos(rxConst);
 				}
 				// `/// name = expr : Description`
@@ -236,7 +243,7 @@ class GmxGen {
 					var value = StringTools.trim(rxMacro.matched(2));
 					var doc = rxMacro.matched(4);
 					if (doc != null) doc = StringTools.trim(doc);
-					addMacro(extMacro, name, value, doc);
+					addMacro(extMacro, name, value, dup ? null : doc);
 					codePos = nextPos(rxMacro);
 				}
 			};
@@ -275,6 +282,7 @@ class GmxGen {
 		var extName:String = xmlRead(xmlFind(extNode, "name"));
 		var extFiles:Xml = xmlFind(extNode, "files");
 		var extDir:String = Path.directory(xmlPath) + "/" + extName;
+		appliedTo = new Map();
 		if (files.length == 0) {
 			for (fileNode in extFiles.elementsNamed("file")) apply(extDir, fileNode);
 		} else for (fileName in files) {
