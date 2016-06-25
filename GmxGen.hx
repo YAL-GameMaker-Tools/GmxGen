@@ -66,7 +66,7 @@ class GmxGen {
 		var mcrNode = addNode(extMacro, "constant");
 		addParam(mcrNode, "name", name);
 		addParam(mcrNode, "value", value);
-		addParam(mcrNode, "hidden", doc == null ? "1" : "0");
+		addParam(mcrNode, "hidden", doc == null ? "-1" : "0");
 		addText(mcrNode, lb0);
 		// additional documentation node:
 		if (doc != null && doc != "") {
