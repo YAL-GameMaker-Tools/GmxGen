@@ -157,39 +157,72 @@ class GmxGen {
 		//
 		var extFuncs:Xml = Xml.createElement("functions");
 		var extMacro:Xml = Xml.createElement("constants");
-		switch (fileExt.toLowerCase()) {
+		var fileExtLq = fileExt.toLowerCase();
+		switch (fileExtLq) {
 			case "gml", "js": {
-				// `/// func(a, b) : doc`
-				var rxFunc = ~/\/\/\/\s*(([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]+))?)/g;
+				// `/// func(a, b) : doc`:
 				var rxArg = ~/([\w_]+)/g;
-				codePos = 0;
-				while (rxFunc.matchSub(code, codePos)) {
-					var argv:String = rxFunc.matched(3);
-					var argm:Array<String> = argv != "" ? argv.split(",") : [];
-					var args = [];
-					for (arg in argm) {
-						var argName = rxArg.match(arg)
-							? rxArg.matched(1)
-							: "arg" + (args.length + 1);
-						args.push({ name: argName, type: 2 });
-					}
-					var argc = argm.length;
-					// signs of variable argument count:
-					if (argv.indexOf("...") >= 0
-					|| argv.indexOf("=") >= 0
-					|| argv.indexOf("?") >= 0) argc = -1;
-					var doc = rxFunc.matched(5);
-					addFunc(extFuncs, {
-						name: rxFunc.matched(2),
-						doc: doc,
-						fulldoc: doc != null ? rxFunc.matched(1) : null,
-						argc: argc,
-						args: args,
-						ret: 2,
-					});
-					codePos = nextPos(rxFunc);
-				}
-				// `/// name = expr : Description`
+				for (iter in (fileExtLq == "js" ? 0 : -1) ... (fileExtLq == "js" ? 3 : 1)) {
+					var rxData:{ rx:EReg, name:Int, args:Int, doc:Int } = switch (iter) {
+						case -1: {
+							rx: ~/#define\s+([\w_]+)\n\/\/\/\s*(\(([^\)]*)\))?(\s*:\s*([^\n]*))?/,
+							name: 1, args: 3, doc: 5,
+						};
+						case 1: {
+							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?\n\s*function\s+([\w_]+)/g,
+							name: 4, args: 1, doc: 3,
+						};
+						case 2: {
+							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?\n\s*function\s+([\w_]+)\(([^\)]*)\)/g,
+							name: 3, args: 4, doc: 2,
+						};
+						default: {
+							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?/g,
+							name: 1, args: 2, doc: 4,
+						};
+					};
+					//
+					var rxFunc = rxData.rx;
+					var riName = rxData.name;
+					var riArgs = rxData.args;
+					var riDoc = rxData.doc;
+					//
+					codePos = 0;
+					while (rxFunc.matchSub(code, codePos)) {
+						var argv:String = rxFunc.matched(riArgs);
+						if (argv == null) argv = "";
+						var argm:Array<String> = argv != "" ? argv.split(",") : [];
+						var args = [];
+						for (arg in argm) {
+							var argName = rxArg.match(arg)
+								? rxArg.matched(1)
+								: "arg" + (args.length + 1);
+							args.push({ name: argName, type: 2 });
+						}
+						var argc = argm.length;
+						// signs of variable argument count:
+						if (argv.indexOf("...") >= 0
+						|| argv.indexOf("=") >= 0
+						|| argv.indexOf("?") >= 0) argc = -1;
+						var doc = rxFunc.matched(riDoc);
+						var name = rxFunc.matched(riName);
+						var fdoc = null;
+						if (doc != null) {
+							fdoc = name + "(" + argv + ")";
+							if (doc != "") fdoc += " : " + doc;
+						}
+						addFunc(extFuncs, {
+							name: name,
+							doc: doc,
+							fulldoc: fdoc,
+							argc: argc,
+							args: args,
+							ret: 2,
+						});
+						codePos = nextPos(rxFunc);
+					} // while (rxFunc.matchSub)
+				} // for (iter)
+				// `/// name = expr : Description`:
 				var rxMacro = ~/\/\/\/\s*([\w_]+)\s*=\s*([^:\n]+)(\s*:\s*([^\n]+))?/g;
 				codePos = 0;
 				while (rxMacro.matchSub(code, codePos)) {
