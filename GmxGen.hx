@@ -165,19 +165,19 @@ class GmxGen {
 				for (iter in (fileExtLq == "js" ? 0 : -1) ... (fileExtLq == "js" ? 3 : 1)) {
 					var rxData:{ rx:EReg, name:Int, args:Int, doc:Int } = switch (iter) {
 						case -1: {
-							rx: ~/#define\s+([\w_]+)\n\/\/\/\s*(\(([^\)]*)\))?(\s*:\s*([^\n]*))?/,
+							rx: ~/#define\s+([\w_]+)\n\/\/\/\s*(\(([^\)]*)\))?(\s*:\s*([^\n]*))?[^\n]*/,
 							name: 1, args: 3, doc: 5,
 						};
 						case 1: {
-							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?\n\s*function\s+([\w_]+)/g,
+							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?[^\n]*\n[ \t]*function\s+([\w_]+)/g,
 							name: 4, args: 1, doc: 3,
 						};
 						case 2: {
-							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?\n\s*function\s+([\w_]+)\(([^\)]*)\)/g,
+							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?[^\n]*\n[ \t]*function\s+([\w_]+)\(([^\)]*)\)/g,
 							name: 3, args: 4, doc: 2,
 						};
 						default: {
-							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?/g,
+							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?[^\n]*/g,
 							name: 1, args: 2, doc: 4,
 						};
 					};
