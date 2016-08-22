@@ -155,6 +155,7 @@ class GmxGen {
 			return nextPos_ofs.pos + nextPos_ofs.len;
 		}
 		//
+		var refFuncs:Array<GmxFunc> = [];
 		var extFuncs:Xml = Xml.createElement("functions");
 		var extMacro:Xml = Xml.createElement("constants");
 		var fileExtLq = fileExt.toLowerCase();
@@ -211,7 +212,8 @@ class GmxGen {
 							fdoc = name + "(" + argv + ")";
 							if (doc != "") fdoc += " : " + doc;
 						}
-						addFunc(extFuncs, {
+						refFuncs.push({
+							pos: rxFunc.matchedPos().pos,
 							name: name,
 							doc: doc,
 							fulldoc: fdoc,
@@ -221,7 +223,11 @@ class GmxGen {
 						});
 						codePos = nextPos(rxFunc);
 					} // while (rxFunc.matchSub)
-				} // for (iter)
+				} // for (rxiter)
+				refFuncs.sort(function(a, b) {
+					return a.pos - b.pos;
+				});
+				for (f in refFuncs) addFunc(extFuncs, f);
 				// `/// name = expr : Description`:
 				var rxMacro = ~/\/\/\/\s*([\w_]+)\s*=\s*([^:\n]+)(\s*:\s*([^\n]+))?/g;
 				codePos = 0;
@@ -252,6 +258,7 @@ class GmxGen {
 						argvPos = nextPos(rxArg);
 					}
 					addFunc(extFuncs, {
+						pos: rxFunc.matchedPos().pos,
 						name: rxFunc.matched(4),
 						doc: dup ? null : rxFunc.matched(2),
 						ret: rxFunc.matched(3) == "double" ? 2 : 1,
@@ -348,6 +355,7 @@ typedef GmxArg = {
 }
 
 typedef GmxFunc = {
+	pos:Int,
 	name:String,
 	?doc:String,
 	?fulldoc:String,
