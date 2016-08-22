@@ -164,20 +164,20 @@ class GmxGen {
 				var rxArg = ~/([\w_]+)/g;
 				for (iter in (fileExtLq == "js" ? 0 : -1) ... (fileExtLq == "js" ? 3 : 1)) {
 					var rxData:{ rx:EReg, name:Int, args:Int, doc:Int } = switch (iter) {
-						case -1: {
+						case -1: { // `#define name\n/// `(...)`? ` : doc`?`
 							rx: ~/#define\s+([\w_]+)\n\/\/\/\s*(\(([^\)]*)\))?(\s*:\s*([^\n]*))?[^\n]*/,
 							name: 1, args: 3, doc: 5,
 						};
-						case 1: {
-							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?[^\n]*\n[ \t]*function\s+([\w_]+)/g,
-							name: 4, args: 1, doc: 3,
+						case 1: { // `/// `(...)`? ` : doc`?\nfunction name`
+							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?([^\n:]*)?\n[ \t]*function\s+([\w_]+)/g,
+							name: 5, args: 1, doc: 3,
 						};
-						case 2: {
-							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?[^\n]*\n[ \t]*function\s+([\w_]+)\(([^\)]*)\)/g,
-							name: 3, args: 4, doc: 2,
+						case 2: { // `/// ` : doc`?\nfunction name(...)`
+							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?([^\n:]*)?\n[ \t]*function\s+([\w_]+)\(([^\)]*)\)/g,
+							name: 4, args: 5, doc: 2,
 						};
-						default: {
-							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?[^\n]*/g,
+						default: { // `/// name(...) ` : doc`?`
+							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?([^\n:]*)?/g,
 							name: 1, args: 2, doc: 4,
 						};
 					};
