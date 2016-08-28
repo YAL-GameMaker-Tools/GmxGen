@@ -161,28 +161,37 @@ class GmxGen {
 		var fileExtLq = fileExt.toLowerCase();
 		switch (fileExtLq) {
 			case "gml", "js": {
-				// `/// func(a, b) : doc`:
 				var rxArg = ~/([\w_]+)/g;
-				for (iter in (fileExtLq == "js" ? 0 : -1) ... (fileExtLq == "js" ? 3 : 1)) {
-					var rxData:{ rx:EReg, name:Int, args:Int, doc:Int } = switch (iter) {
-						case -1: { // `#define name\n/// `(...)`? ` : doc`?`
-							rx: ~/#define\s+([\w_]+)\n\/\/\/\s*(\(([^\)]*)\))?(\s*:\s*([^\n]*))?[^\n]*/,
-							name: 1, args: 3, doc: 5,
-						};
-						case 1: { // `/// `(...)`? ` : doc`?\nfunction name`
-							rx: ~/\/\/\/\s*\(([^\)]*)\)(\s*:\s*([^\n]*))?([^\n:]*)?\n[ \t]*function\s+([\w_]+)/g,
-							name: 5, args: 1, doc: 3,
-						};
-						case 2: { // `/// ` : doc`?\nfunction name(...)`
-							rx: ~/\/\/\/\s*(\s*:\s*([^\n]*))?([^\n:]*)?\n[ \t]*function\s+([\w_]+)\(([^\)]*)\)/g,
-							name: 4, args: 5, doc: 2,
-						};
-						default: { // `/// name(...) ` : doc`?`
-							rx: ~/\/\/\/\s*([\w_]+)\(([^\)]*)\)(\s*:\s*([^\n]*))?([^\n:]*)?/g,
-							name: 1, args: 2, doc: 4,
-						};
-					};
-					//
+				var js = fileExtLq == "js";
+				var rxDatas = {
+					var rxName = "(\\w+)";
+					var rxParams = "(?:\\s*\\(([^\\)]*)\\))"; // (...)
+					var rxDoc = '(?:\\s*:\\s*([^\\n]*)|[^\\n]*)'; // 
+					var out = [];
+					if (js) {
+						for (rxDef in ['function\\s+$rxName', 'window.$rxName\\s*=\\s*function']) {
+							out.push({ /// (...) : doc\nfunction name
+								rx: new EReg('///$rxParams$rxDoc\n\\s*$rxDef', "g"),
+								args: 1, doc: 2, name: 3,
+							});
+							out.push({ ///: doc\nfunction name(...)
+								rx: new EReg('///$rxDoc\n\\s*$rxDef$rxParams', "g"),
+								doc: 1, name: 2, args: 3,
+							});
+						}
+					} else {
+						out.push({ /// #define name\n///(...) : doc
+							rx: new EReg('#define $rxName\n(?///$rxParams?$rxDoc)?', "g"),
+							name: 1, args: 2, doc: 3,
+						});
+					}
+					out.push({ /// name(...) : doc
+						rx: new EReg('///\\s*$rxName$rxParams$rxDoc', "g"),
+						name: 1, args: 2, doc: 3,
+					});
+					out;
+				};
+				for (rxData in rxDatas) {
 					var rxFunc = rxData.rx;
 					var riName = rxData.name;
 					var riArgs = rxData.args;
