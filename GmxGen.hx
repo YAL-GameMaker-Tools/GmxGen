@@ -181,7 +181,7 @@ class GmxGen {
 						}
 					} else {
 						out.push({ /// #define name\n///(...) : doc
-							rx: new EReg('#define $rxName\n(?///$rxParams?$rxDoc)?', "g"),
+							rx: new EReg('#define $rxName\n(?:///$rxParams?$rxDoc)?', "g"),
 							name: 1, args: 2, doc: 3,
 						});
 					}
@@ -238,7 +238,7 @@ class GmxGen {
 				});
 				for (f in refFuncs) addFunc(extFuncs, f);
 				// `/// name = expr : Description`:
-				var rxMacro = ~/\/\/\/\s*([\w_]+)\s*=\s*([^:\n]+)(\s*:\s*([^\n]+))?/g;
+				var rxMacro = ~/\/\/\/[ \t]*([\w_]+)[ \t]*=[ \t]*([^:\n]+)([ \t]*:[ \t]*([^\n]*))?/g;
 				codePos = 0;
 				while (rxMacro.matchSub(code, codePos)) {
 					var name = rxMacro.matched(1);
