@@ -238,13 +238,26 @@ class GmxGen {
 				});
 				for (f in refFuncs) addFunc(extFuncs, f);
 				// `/// name = expr : Description`:
-				var rxMacro = ~/\/\/\/[ \t]*([\w_]+)[ \t]*=[ \t]*([^:\n]+)([ \t]*:[ \t]*([^\n]*))?/g;
+				var rxMacro = ~/\/\/\/[ \t]*([\w_]+)[ \t]*=[ \t]*([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
 				codePos = 0;
 				while (rxMacro.matchSub(code, codePos)) {
 					var name = rxMacro.matched(1);
 					var value = StringTools.trim(rxMacro.matched(2));
-					var doc = rxMacro.matched(4);
+					var doc = rxMacro.matched(3);
 					if (doc != null) doc = StringTools.trim(doc);
+					addMacro(extMacro, name, value, doc);
+					codePos = nextPos(rxMacro);
+				}
+				// `#macro name = expr : Desc`:
+				rxMacro = ~/(?:\/\/#|#macro[ \t])?[ \t]*(\w+)[ \t](?:=[ \t]*)?([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
+				codePos = 0;
+				while (rxMacro.matchSub(code, codePos)) {
+					var name = rxMacro.matched(1);
+					var value = StringTools.trim(rxMacro.matched(2));
+					var doc = rxMacro.matched(3);
+					if (doc != null) {
+						doc = StringTools.trim(doc);
+					} else doc = "";
 					addMacro(extMacro, name, value, doc);
 					codePos = nextPos(rxMacro);
 				}
