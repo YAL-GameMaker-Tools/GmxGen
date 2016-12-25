@@ -3,6 +3,7 @@ package;
 import sys.FileSystem;
 import sys.io.File;
 import haxe.io.Path;
+using StringTools;
 
 /**
  * ...
@@ -249,7 +250,7 @@ class GmxGen {
 					codePos = nextPos(rxMacro);
 				}
 				// `#macro name = expr : Desc`:
-				rxMacro = ~/(?:\/\/#|#macro[ \t])?[ \t]*(\w+)[ \t](?:=[ \t]*)?([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
+				rxMacro = ~/(?:\/\/#|#macro[ \t])[ \t]*(\w+)[ \t](?:=[ \t]*)?([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
 				codePos = 0;
 				while (rxMacro.matchSub(code, codePos)) {
 					var name = rxMacro.matched(1);
@@ -266,18 +267,19 @@ class GmxGen {
 				// `/// doc` [optional]
 				// `dllx type func(type arg1, type arg2)`
 				var rxFunc = ~/(\/\/\/ *([^\n]*)\n)?\s*dllx\s+(double|char *\*)\s+([\w_]+)\(([^\)]*)\)/g;
-				var rxArg = ~/(double|char *\*)\s+([\w_]+)/g;
+				//var rxArg = ~/(\&*\s*\w+ *\*)\s+([\w_]+)/g;
+				var rxArg = ~/^\s*(.+?\b)(\w+)\s*$/g;
 				codePos = 0;
 				while (rxFunc.matchSub(code, codePos)) {
-					var argv = rxFunc.matched(5);
 					var args = [];
-					var argvPos = 0;
-					while (rxArg.matchSub(argv, argvPos)) {
-						args.push({
-							type: rxArg.matched(1) == "double" ? 2 : 1,
-							name: rxArg.matched(2),
-						});
-						argvPos = nextPos(rxArg);
+					var argv = rxFunc.matched(5);
+					if (argv.trim() != "") for (arg in argv.split(",")) {
+						if (rxArg.match(arg)) {
+							args.push({
+								type: rxArg.matched(1).trim() == "double" ? 2 : 1,
+								name: rxArg.matched(2)
+							});
+						} else throw 'Can\'t match "$arg".';
 					}
 					addFunc(extFuncs, {
 						pos: rxFunc.matchedPos().pos,
@@ -308,7 +310,7 @@ class GmxGen {
 					addMacro(extMacro, name, value, dup ? null : doc);
 					codePos = nextPos(rxMacro);
 				}
-			};
+			}; // case "dll", "dylib", "so"
 			default:
 		}
 		if (extFuncs.firstChild() != null) addText(extFuncs, lbz);

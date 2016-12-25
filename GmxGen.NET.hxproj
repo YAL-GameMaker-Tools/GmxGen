@@ -24,7 +24,7 @@
     <option noInlineOnDebug="False" />
     <option mainClass="GmxGen" />
     <option enabledebug="False" />
-    <option additional="-cmd copy /Y &quot;GmxGen.NET\bin\GmxGen.exe&quot; &quot;bin\GmxGen.exe&quot;" />
+    <option additional="" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>
@@ -42,7 +42,7 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False" />
+  <postBuildCommand alwaysRun="False">cmd /c copy GmxGen.NET\bin\GmxGen.exe bin\GmxGen.exe</postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
