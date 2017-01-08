@@ -166,17 +166,18 @@ class GmxGen {
 				var js = fileExtLq == "js";
 				var rxDatas = {
 					var rxName = "(\\w+)";
-					var rxParams = "(?:\\s*\\(([^\\)]*)\\))"; // (...)
-					var rxDoc = '(?:\\s*:\\s*([^\\n]*)|[^\\n]*)'; // 
+					var osp = '[ \t]*'; // optional spacing
+					var rxParams = '(?:$osp\\(([^\\)]*)\\))'; // (...)
+					var rxDoc = '(?:$osp:$osp([^\\n]*)|[^\\n]*)'; // ` : doc`
 					var out = [];
 					if (js) {
-						for (rxDef in ['function\\s+$rxName', 'window.$rxName\\s*=\\s*function']) {
+						for (rxDef in ['function${osp}$rxName', 'window.$rxName$osp=${osp}function']) {
 							out.push({ /// (...) : doc\nfunction name
-								rx: new EReg('///$rxParams$rxDoc\n\\s*$rxDef', "g"),
+								rx: new EReg('///$rxParams$rxDoc\n$osp$rxDef', "g"),
 								args: 1, doc: 2, name: 3,
 							});
 							out.push({ ///: doc\nfunction name(...)
-								rx: new EReg('///$rxDoc\n\\s*$rxDef$rxParams', "g"),
+								rx: new EReg('///$rxDoc\n$osp$rxDef$rxParams', "g"),
 								doc: 1, name: 2, args: 3,
 							});
 						}
