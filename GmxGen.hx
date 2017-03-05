@@ -346,7 +346,9 @@ class GmxGen {
 		var extNode:Xml = xmlFind(xmlRoot, "extension");
 		var extName:String = xmlRead(xmlFind(extNode, "name"));
 		var extFiles:Xml = xmlFind(extNode, "files");
-		var extDir:String = Path.directory(xmlPath) + "/" + extName;
+		var extDir:String = Path.directory(xmlPath);
+		if (extDir == "") extDir = ".";
+		extDir += "/" + extName;
 		appliedTo = new Map();
 		if (files.length == 0) {
 			for (fileNode in extFiles.elementsNamed("file")) apply(extDir, fileNode);
