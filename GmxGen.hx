@@ -155,6 +155,14 @@ class GmxGen {
 			nextPos_ofs = rx.matchedPos();
 			return nextPos_ofs.pos + nextPos_ofs.len;
 		}
+		function each(rx:EReg, s:String, fn:EReg->Void) {
+			var rpos = 0;
+			while (rx.matchSub(s, rpos)) {
+				fn(rx);
+				var npos = rx.matchedPos();
+				rpos = npos.pos + npos.len;
+			}
+		}
 		//
 		var refFuncs:Array<GmxFunc> = [];
 		var extFuncs:Xml = Xml.createElement("functions");
@@ -168,10 +176,17 @@ class GmxGen {
 					var rxName = "(\\w+)";
 					var osp = '[ \t]*'; // optional spacing
 					var rxParams = '(?:$osp\\(([^\\)]*)\\))'; // (...)
-					var rxDoc = '(?:$osp:$osp([^\\n]*)|[^\\n]*)'; // ` : doc`
+					var rxDoc = '(?:$osp:$osp([^\\n]*)'
+						+ '|$osp\\w+$osp[^\\(][^\\n]*'
+						+ '|$osp[^\\w][^\\n]*'
+						+ '|$osp'
+					+ ')'; // ` : doc`
 					var out = [];
 					if (js) {
-						for (rxDef in ['function${osp}$rxName', 'window.$rxName$osp=${osp}function']) {
+						for (rxDef in [
+							'function${osp}$rxName',
+							'window.$rxName$osp=${osp}function'
+						]) {
 							out.push({ /// (...) : doc\nfunction name
 								rx: new EReg('///$rxParams$rxDoc\n$osp$rxDef', "g"),
 								args: 1, doc: 2, name: 3,
@@ -239,30 +254,40 @@ class GmxGen {
 					return a.pos - b.pos;
 				});
 				for (f in refFuncs) addFunc(extFuncs, f);
-				// `/// name = expr : Description`:
-				var rxMacro = ~/\/\/\/[ \t]*([\w_]+)[ \t]*=[ \t]*([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
-				codePos = 0;
-				while (rxMacro.matchSub(code, codePos)) {
-					var name = rxMacro.matched(1);
-					var value = StringTools.trim(rxMacro.matched(2));
-					var doc = rxMacro.matched(3);
-					if (doc != null) doc = StringTools.trim(doc);
+				// `/// name = expr : Desc`:
+				each(~/\/\/\/[ \t]*(\w+)[ \t]*=[ \t]*([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g,
+				code, function(r:EReg) {
+					var name = r.matched(1);
+					var value = r.matched(2).trim();
+					var doc = r.matched(3);
+					if (doc != null) doc = doc.trim();
 					addMacro(extMacro, name, value, doc);
-					codePos = nextPos(rxMacro);
-				}
+				});
+				// ~/(?:\/\/#|#macro[ \t])[ \t]*(\w+)[ \t](?:=[ \t]*)?([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g
 				// `#macro name = expr : Desc`:
-				rxMacro = ~/(?:\/\/#|#macro[ \t])[ \t]*(\w+)[ \t](?:=[ \t]*)?([^:\n]+)(?:[ \t]*:[ \t]*([^\n]*))?/g;
-				codePos = 0;
-				while (rxMacro.matchSub(code, codePos)) {
-					var name = rxMacro.matched(1);
-					var value = StringTools.trim(rxMacro.matched(2));
-					var doc = rxMacro.matched(3);
-					if (doc != null) {
-						doc = StringTools.trim(doc);
-					} else doc = "";
+				each(new EReg(
+					"(?:\\/\\/#|#macro[ \\t])[ \\t]*" // prefix
+					+ "(\\w+)[ \\t]" // macro' name
+					+ "(?:[ \\t]*[:=][ \\t]*)?" // optional `:` or `=`
+					+ "([^:\\n]+)" // macro' value
+					+ "(?:[ \\t]*:[ \\t]*([^\\n]*))?" // doc
+				, "g"), code, function(r:EReg) {
+					var name = r.matched(1);
+					if (name == "global") return; // "//#global"
+					var value = r.matched(2).trim();
+					var doc = r.matched(3);
+					if (doc != null) doc = doc.trim();
 					addMacro(extMacro, name, value, doc);
-					codePos = nextPos(rxMacro);
-				}
+				});
+				// `#global name : Desc`
+				each(~/#global[ \t]+(\w+)(?:[ \t]*:[ \t]*([^\n]*))?/g,
+				code, function(r:EReg) {
+					var name = r.matched(1);
+					var value = "global.g_" + name;
+					var doc = r.matched(2);
+					if (doc != null) doc = doc.trim();
+					addMacro(extMacro, name, value, doc);
+				});
 			};
 			case "dll", "dylib", "so": {
 				// `/// doc` [optional]
@@ -311,6 +336,24 @@ class GmxGen {
 					addMacro(extMacro, name, value, dup ? null : doc);
 					codePos = nextPos(rxMacro);
 				}
+				(function() { // enums
+					var rxCommentL = ~/\/\/.*/g;
+					var rxCommentM = ~/\/\*.*(\s+.*)*?\*\//g;
+					var rxEnumCtr = ~/([_a-zA-Z][_a-zA-Z0-9]*)(?:\s*=\s*(\d+))?\s*(?:,|$)/g;
+					each(~/\/\/\/\s*([^\n]*)\n\s*enum\s+(\w+)\s*\{([^}]*)\}/g, code, function(r:EReg) {
+						var inner = r.matched(3);
+						inner = rxCommentL.replace(inner, "");
+						inner = rxCommentM.replace(inner, "");
+						var doc = r.matched(1).indexOf(":") >= 0 ? "" : null;
+						var nid = 0;
+						each(rxEnumCtr, inner, function(rc:EReg) {
+							var val = rc.matched(2);
+							var cid = val != null ? Std.parseInt(val) : nid;
+							addMacro(extMacro, rc.matched(1), "" + cid, doc);
+							nid = cid + 1;
+						});
+					});
+				})();
 			}; // case "dll", "dylib", "so"
 			default:
 		}
