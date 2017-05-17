@@ -339,7 +339,7 @@ class GmxGen {
 				(function() { // enums
 					var rxCommentL = ~/\/\/.*/g;
 					var rxCommentM = ~/\/\*.*(\s+.*)*?\*\//g;
-					var rxEnumCtr = ~/([_a-zA-Z][_a-zA-Z0-9]*)(?:\s*=\s*(\d+))?\s*(?:,|$)/g;
+					var rxEnumCtr = ~/([_a-zA-Z][_a-zA-Z0-9]*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 					each(~/\/\/\/\s*([^\n]*)\n\s*enum\s+(\w+)\s*\{([^}]*)\}/g, code, function(r:EReg) {
 						var inner = r.matched(3);
 						inner = rxCommentL.replace(inner, "");
