@@ -383,8 +383,22 @@ class GmxGen {
 		}
 		//
 		var xmlPath = args[0];
+		if (!FileSystem.exists(xmlPath) && FileSystem.exists(xmlPath + ".extension.gmx")) {
+			xmlPath += ".extension.gmx";
+		}
 		var files = args.slice(1);
-		var text:String = File.getContent(xmlPath);
+		var text:String;
+		try {
+			text = File.getContent(xmlPath);
+		} catch (_:Dynamic) {
+			try {
+				text = File.getContent(xmlPath + ".extension.gmx");
+				xmlPath += ".extension.gmx";
+			} catch (_:Dynamic) {
+				Sys.println("Couldn't open `" + xmlPath + "`.");
+				return;
+			}
+		}
 		var xmlRoot:Xml = haxe.xml.Parser.parse(text);
 		var extNode:Xml = xmlFind(xmlRoot, "extension");
 		var extName:String = xmlRead(xmlFind(extNode, "name"));
