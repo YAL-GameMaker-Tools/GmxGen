@@ -117,8 +117,7 @@ class GmxGen {
 	}
 	
 	static var appliedTo:Map<String, Bool>;
-	static function apply(basePath:String, fileNode:Xml, ?fileName:String) {
-		if (fileName == null) fileName = xmlRead(xmlFind(fileNode, "filename"));
+	static function apply(basePath:String, fileNode:Xml, fileName:String) {
 		var filePath:String = basePath + "/" + fileName;
 		var fileExt = Path.extension(fileName).toLowerCase();
 		// for binary files, expect a .cpp near the file.
@@ -375,18 +374,10 @@ class GmxGen {
 		}
 	}
 	
-	static function main() {
-		var args = Sys.args();
-		if (args.length < 1) {
-			Sys.println("Usage: .../some.extension.gmx [...file.ext]");
-			return;
-		}
-		//
-		var xmlPath = args[0];
-		if (!FileSystem.exists(xmlPath) && FileSystem.exists(xmlPath + ".extension.gmx")) {
+	static function parseExtension(xmlPath:String) {
+		/*if (!FileSystem.exists(xmlPath) && FileSystem.exists(xmlPath + ".extension.gmx")) {
 			xmlPath += ".extension.gmx";
-		}
-		var files = args.slice(1);
+		}*/
 		var text:String;
 		try {
 			text = File.getContent(xmlPath);
@@ -396,9 +387,10 @@ class GmxGen {
 				xmlPath += ".extension.gmx";
 			} catch (_:Dynamic) {
 				Sys.println("Couldn't open `" + xmlPath + "`.");
-				return;
+				return null;
 			}
 		}
+		//
 		var xmlRoot:Xml = haxe.xml.Parser.parse(text);
 		var extNode:Xml = xmlFind(xmlRoot, "extension");
 		var extName:String = xmlRead(xmlFind(extNode, "name"));
@@ -406,10 +398,20 @@ class GmxGen {
 		var extDir:String = Path.directory(xmlPath);
 		if (extDir == "") extDir = ".";
 		extDir += "/" + extName;
-		appliedTo = new Map();
-		if (files.length == 0) {
-			for (fileNode in extFiles.elementsNamed("file")) apply(extDir, fileNode);
-		} else for (fileName in files) {
+		return {
+			path: xmlPath,
+			root: xmlRoot,
+			dir: extDir,
+			files: extFiles,
+		};
+	}
+	
+	static function forEachExtFile(extFiles:Xml, fileArgs:Array<String>, fn:String->Xml->Void) {
+		if (fileArgs.length == 0) {
+			for (fileNode in extFiles.elementsNamed("file")) {
+				fn(xmlRead(xmlFind(fileNode, "filename")), fileNode);
+			}
+		} else for (fileName in fileArgs) {
 			var fileNode:Xml = null;
 			for (node in extFiles.elementsNamed("file")) {
 				if (xmlRead(xmlFind(node, "filename")) == fileName) {
@@ -420,9 +422,63 @@ class GmxGen {
 			if (fileNode == null) {
 				error('Could not find <file> with <filename> $fileName in the GMX.');
 			}
-			apply(extDir, fileNode, fileName);
+			fn(fileName, fileNode);
 		}
-		File.saveContent(xmlPath, xmlRoot.toString());
+	}
+	
+	static function run(args:Array<String>) {
+		var d = parseExtension(args[0]);
+		if (d == null) return false;
+		var fileArgs = args.slice(1);
+		appliedTo = new Map();
+		forEachExtFile(d.files, fileArgs, function(fileName:String, fileNode:Xml) {
+			apply(d.dir, fileNode, fileName);
+		});
+		File.saveContent(d.path, d.root.toString());
+		return true;
+	}
+	
+	static function main() {
+		var args = Sys.args();
+		if (args.length < 1) {
+			Sys.println("Usage: .../some.extension.gmx [...file.ext]");
+			return;
+		}
+		var server = false;
+		for (arg in args) {
+			if (arg == "--watch") {
+				server = true;
+				args.remove(arg);
+			}
+		}
+		if (!run(args)) return;
+		if (server) {
+			var fileArgs = args.slice(1);
+			Sys.println("Listening for file changes...");
+			var d = parseExtension(args[0]);
+			if (d == null) return;
+			var fileMap = new Map();
+			while (true) {
+				var changed = [];
+				forEachExtFile(d.files, fileArgs, function(fileName:String, fileNode:Xml) {
+					var t = FileSystem.stat(d.dir + "/" + fileName).mtime.getTime();
+					var fd = fileMap[fileName];
+					if (fd == null) {
+						fd = { name: fileName, time: t };
+						fileMap.set(fileName, fd);
+					} else if (t != fd.time) {
+						fd.time = t;
+						changed.push(fileName);
+					}
+				});
+				if (changed.length > 0) {
+					Sys.println('[${Date.now().toString()}] ${changed.join(", ")} changed, recompiling...');
+					changed.unshift(args[0]);
+					run(changed);
+				}
+				Sys.sleep(1);
+			}
+		}
 	}
 	
 }
