@@ -1,10 +1,12 @@
 # GmxGen
-This small program takes a .extension.gmx file and updates it's included files with accordance with the functions and macros defined inside.
+This small program takes a .extension.gmx (GMS1) or .yy (GMS2) file and updates it's included files with accordance with the functions and macros defined inside.
 
 So, instead of tinkering with the little pop-up menus for defining functions and macros per extension file, you can hint them in your files
 ## Usage
 ```
 gmxgen .../some.extension.gmx
+-- OR --
+gmxgen .../some.yy
 ```
 To index and update all compatible files in the extension. Or,
 ```
@@ -12,71 +14,147 @@ gmxgen .../some.extension.gmx file1.gml file2.dll
 ```
 To only index and update particular files in the extension.
 
-## Syntax
+Add `--watch` to stay around and watch files for changes, e.g.
+```
+gmxgen .../some.yy file1.gml --watch
+```
+
+---
+
 Below are listed the formats for hinting function and macros definitions per language.
 
-If a definition does not have a description attached, it will be converted into a "hidden" function/macros (usable, but not shown in auto-completion). Definitions with descriptions (even blank descriptions, such as `/// func() :`) will be visible in auto-completion.
-
-### GML & JS
-**Function definitions:**
+## Macros
+`#macro` definitions inside extensions are not visible to the game code so a comment-based syntax is used instead
 ```
 #!javascript
-/// function_name(argument1, argument2) : Description
-```
-` : Description` can be omitted.
+//#macro name value
+// -> normal macro
 
-Optional parameters can be hinted with Haxe-style prefixes and suffixes:
-```
-#!javascript
-/// function_name(req, ?opt1, opt2 = 0)
-```
-Function definitions with optional parameters will be marked as having variable argument count.
+//#macro name value~
+// -> hidden macro
 
-You can also explicitly define variable argument count via `...`, for example:
-```
-#!javascript
-/// trace(...values)
+//#macro name value : notes
+// -> macro with notes (old format)
 ```
 
-**Macros definitions:**
-```
-#!javascript
-/// macro_name = expression
-```
-Or
-```
-/// macro_name = expression : Description
-```
-Expression will be taken "as-is", so use parenthesis, if you must.
+## GameMaker Language
+GML files inside extensions consist of series of scripts delimited by `#define <name>`.
 
-### C++ (DLL, DyLib, SO)
-For the C++ binaries, a .cpp file (named same as the binary file) should be lying next to the binary file. It doesn't have to be valid C++ (just have the definitions in the right format), so you can safely concat multiple files into a single one if needed.
+If the `#define` line is followed by one or more `/// comment` lines, they will be used to determine the number of arguments and help-line. Otherwise the number of arguments will be determined based on `argument[K]` / `argumentK` use and the script will be hidden from auto-completion.
 
-**Function definitions:**
-```
-#!cpp
-/// Description
-dllx type function_name(type argument1, type argument2)
-```
-`type` can be either `double` or `char*`;
+Optional arguments are denoted as `?argName`.
 
-Description-line is optional;
+Ability to add an arbitrary number of trailing arguments (such as with `ds_list_add`, for example) is denoted as `...argNames`.
 
-`dllx` is a macro expanding to the export prefix, usually
+### GMS1-style documentation syntax (preferred):
+```cpp
+#define scr_add
+/// (num1, num2)
+
+#define scr_add
+/// (num1, num2)->number
+
+#define scr_add
+/// (num1, num2) : adds numbers
+
+#define scr_add
+/// (num1, num2)->number : adds numbers
+
+#define scr_print
+/// (tag, ...values)
+
+#define scr_hidden
+/// (a, b, c)~
 ```
-#!cpp
+### GMS2-style documentation syntax:
+```cpp
+#define scr_add
+/// @param num1
+/// @param num2
+// would show as scr_add(num1, num2)
+
+#define scr_print
+/// @param tag
+/// @param ...values
+// would show as scr_print(tag, ...values)
+
+#define scr_hidden
+/// @param a
+/// @param b
+/// @param c
+/// @hide
+```
+
+### Global variables
+You can define global variables as
+```js
+//#global name
+//#global name2~
+```
+which is shorthand for
+```js
+//#macro name global.g_name
+//#macro name2 global.g_name2~
+```
+(see Macros) to save a bit of typing.
+
+## JavaScript
+Things are much akin to GML except with documentation-comment in front of the definition,
+```js
+///~
+function add(a, b) { ... } // 2-argument, hidden
+
+/// : adds numbers
+function add(a, b) { ... } // 2-argument, visible
+
+/// (tag, ...values)
+function print(tag, rest) { ... } // variable argument count
+
+/// : adds numbers
+window.add = function(a, b) { ... } // alternate syntax (if you use closures)
+```
+## C++ (DLL, DyLib, SO)
+For the C++ binaries, a .cpp file (named same as the binary file) should be placed in the same directory with the binary file. It doesn't have to be valid C++ (just have the definitions in the right format), so you can safely concat multiple files into a single one if needed.
+
+### Functions
+```cpp
+/// adds numbers
+dllx double add(double a, double b) { ... }
+
+///
+dllx char* greet(char* name) { ... }
+
+///
+dllx double measure(int* items) { ... } // treats a buffer_get_address as an array of integers
+```
+
+where `dllx` is a C++ macro name auto-detected from a line in format
+```cpp
 #define dllx extern "C" __declspec(dllexport)
 ```
 
-**Macros definitions:**
+### Macros
+Aside of the usual `//#macro` syntax, you can also define macros in a way that is visible to both C++ and GM,
+```cpp
+///
+#define version 101
 
-You can use the same syntax as for GML/JS, or hint C++ macro definitions for constants:
+///~
+#define format 3
+// ^ hidden
 ```
-#!cpp
-/// Description
-#define name value
+
+### Enums
+
+Classic "flat" enums can be automatically converted to macros,
+```cpp
+enum some {
+	e_A,
+	e_B,
+	e_C = 4
+};
 ```
-In this case, the documentation line (even if blank) is required, to avoid exporting everything.
+would expose macros `e_A`, `e_B`, and `e_C` equal to `0`, `1`, and `4` accordingly.
 
 ## Author and license
 Author: Vadim "YellowAfterlife" Dyachenko
