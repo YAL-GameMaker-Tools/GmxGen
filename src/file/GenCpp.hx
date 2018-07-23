@@ -65,16 +65,15 @@ class GenCpp extends GenFile {
 		});
 		
 		// `///\n#define name value`
-		new EReg("///.*\n"
+		new EReg("///.*(~)?\n" // -> hide
 			+ "[ \t]*#define"
 			+ "[ \t]+(\\w+)" // -> name
 			+ "[ \t]+(.+?)" // -> value
-			+ "(~)?" // -> hide
 		+ "$","gm").each(code, function(rx:EReg) {
 			var i = 0;
+			var hide = rx.matched(++i) != null;
 			var name = rx.matched(++i);
 			var value = rx.matched(++i);
-			var hide = rx.matched(++i) != null;
 			var pos = rx.matchedPos().pos;
 			macros.push(new GenMacro(name, value, hide, pos));
 		});

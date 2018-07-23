@@ -94,7 +94,7 @@ class GenGml extends file.GenFile {
 			}
 			if (foundHide) fn.comp = null;
 			if (!foundFull && !foundParam) {
-				var script = code.substring(start, end);
+				var script = code.substring(start, end).stripComments();
 				if (rxArgo.match(script)) {
 					fn.argCount = -1;
 				} else {
