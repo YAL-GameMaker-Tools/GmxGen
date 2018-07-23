@@ -41,7 +41,7 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False">cmd /c copy GmxGen.NET\bin\GmxGen.exe bin\GmxGen.exe</postBuildCommand>
+  <postBuildCommand alwaysRun="False">cmd /c copy GmxGen.NET\bin\GenMain.exe bin\GmxGen.exe</postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
