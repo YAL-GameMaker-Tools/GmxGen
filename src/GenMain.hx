@@ -48,16 +48,20 @@ class GenMain {
 		if (watch) Sys.println("Watching for changes...");
 		if (watch) while (true) {
 			Sys.sleep(1);
-			var upd = false;
-			for (path in paths) {
-				if (FileSystem.stat(path).mtime.getTime() > mtime) {
-					upd = true; break;
+			try {
+				var upd = false;
+				for (path in paths) {
+					if (FileSystem.stat(path).mtime.getTime() > mtime) {
+						upd = true; break;
+					}
 				}
+				if (!upd) continue;
+				Sys.println("[" + Date.now().toString() + "] Update");
+				paths = proc(args, path);
+				mtime = FileSystem.stat(path).mtime.getTime();
+			} catch (x:Dynamic) {
+				Sys.println(x);
 			}
-			if (!upd) continue;
-			Sys.println("[" + Date.now().toString() + "] Update");
-			paths = proc(args, path);
-			mtime = FileSystem.stat(path).mtime.getTime();
 		}
 	}
 }
