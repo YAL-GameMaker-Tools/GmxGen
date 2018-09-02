@@ -22,14 +22,14 @@ class GenCpp extends GenFile {
 		var rxArg = ~/^\s*(double)?.+?(\w+)\s*$/g;
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
-				+ "(?:(\\-\\>.+?):)?" // -> type
+				+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
 				+ "(.*)" // -> doc
 			+ "\n)?"
 			+ '[ \t]*$dllExport'
 			+ '[ \t]+(double|char[ \t]*\\*)' // -> rtype
 			+ '[ \t]+(\\w+)' // -> name
 			+ "[ \t]*\\(([^\\)]*)\\)" // -> argData
-		+ "", "g").each(code, function(rx:EReg) {
+		+ "", "gm").each(code, function(rx:EReg) {
 			var i = 0;
 			var hasDoc = rx.matched(++i) != null;
 			var docType = rx.matched(++i);
@@ -58,14 +58,14 @@ class GenCpp extends GenFile {
 			if (hasDoc) {
 				comp += ")";
 				if (docType != null) comp += " " + docType;
-				if (doc != null) comp += " : " + doc;
+				if (doc != null && doc != "") comp += " : " + doc;
 				fn.comp = comp;
 			}
 			functions.push(fn);
 		});
 		
 		// `///\n#define name value`
-		new EReg("///.*(~)?\n" // -> hide
+		new EReg("///.*?(~)?\n" // -> hide
 			+ "[ \t]*#define"
 			+ "[ \t]+(\\w+)" // -> name
 			+ "[ \t]+(.+?)" // -> value
@@ -80,9 +80,9 @@ class GenCpp extends GenFile {
 		
 		var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 		// `///\nenum Some { ... }`
-		new EReg("///.*(~)?" // -> hide
+		new EReg("///.*?(~)?" // -> hide
 			+ "\nenum\\s+(\\w+)" // -> name
-			+ "\\s+\\{(^\x7d)\\}" // -> items
+			+ "\\s+\\{([^\x7d]*)\\}" // -> items
 		+ "", "g").each(code, function(rx:EReg) {
 			var i = 0;
 			var hide = rx.matched(++i) != null;
