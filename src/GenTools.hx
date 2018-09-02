@@ -14,7 +14,7 @@ class GenTools {
 		}
 	}
 	public static function hasVarArg(s:String):Bool {
-		return s.indexOf("?") >= 0 || s.indexOf("...") >= 0;
+		return s.indexOf("?") >= 0 || s.indexOf("...") >= 0 || s.indexOf("=") >= 0;
 	}
 	
 	static var rxCommentLine = ~/\/\/.*/g;
