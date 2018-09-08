@@ -7,6 +7,11 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenCpp extends GenFile {
+	public static var sizeofs:Map<String, Int> = [
+		"char" => 1, "byte" => 1, "uint8" => 1, "int8" => 1,
+		"short" => 2, "int16" => 2, "uint16" => 2,
+		"int" => 4, "int32" => 4, "uint32" => 4,
+	];
 	override public function scan(code:String):Void {
 		super.scan(code);
 		
@@ -81,21 +86,52 @@ class GenCpp extends GenFile {
 		var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 		// `///\nenum Some { ... }`
 		new EReg("///.*?(~)?" // -> hide
-			+ "\nenum\\s+(\\w+)" // -> name
-			+ "\\s+\\{([^\x7d]*)\\}" // -> items
+			+ "\nenum\\s+(?:(class)\\s+)?(\\w+)" // -> name
+			+ "\\s+\\{([^\x7d]*)\\}" // -> items (x7d=cubclose)
 		+ "", "g").each(code, function(rx:EReg) {
 			var i = 0;
 			var hide = rx.matched(++i) != null;
+			var eclass = rx.matched(++i) != null;
 			var ename = rx.matched(++i);
 			var edata = rx.matched(++i).stripComments();
 			var start = rx.matchedPos().pos;
 			var next = 0;
 			rxEnumCtr.each(edata, function(rc:EReg) {
 				var name = rc.matched(1);
+				if (eclass) name = ename + "_" + name;
 				var value = rc.matched(2);
 				var curr = value != null ? Std.parseInt(value) : next;
 				macros.push(new GenMacro(name, "" + curr, hide, start + rc.matchedPos().pos));
 				next = curr + 1;
+			});
+		});
+		
+		var rxStructField = ~/(?:unsigned[ \t]+)?([_a-zA-Z]\w*.*?)[ \t]+([_a-zA-Z]\w*);/g;
+		// `///\nstruct Some { ... }`
+		new EReg("///.*?(~)?" // -> hide
+			+ "\nstruct\\s+(\\w+)" // -> name
+			+ "\\s+\\{([^\x7d]*)\\}" // -> items (x7d=cubclose)
+		+ "", "g").each(code, function(rx:EReg) {
+			var i = 0;
+			var hide = rx.matched(++i) != null;
+			var sname = rx.matched(++i);
+			var edata = rx.matched(++i).stripComments();
+			var start = rx.matchedPos().pos;
+			var offset = 0;
+			rxStructField.each(edata, function(rc:EReg) {
+				if (offset == -1) return;
+				var type = rc.matched(1);
+				var name = rc.matched(2);
+				var size = sizeofs[type];
+				if (size == null) {
+					Sys.println('Size of $type is not known.');
+					offset = -1;
+					return;
+				}
+				macros.push(new GenMacro(
+					sname + "_" + name, "" + offset,
+					hide, start + rc.matchedPos().pos));
+				offset += size;
 			});
 		});
 	}
