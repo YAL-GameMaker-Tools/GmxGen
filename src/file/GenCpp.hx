@@ -107,7 +107,16 @@ class GenCpp extends GenFile {
 			});
 		});
 		
-		var rxStructField = ~/(?:unsigned[ \t]+)?([_a-zA-Z]\w*.*?)[ \t]+([_a-zA-Z]\w*);/g;
+		var rxStructField = new EReg(''
+			+ '(?:unsigned[ \t]+)?' // we don't care if it's unsigned for offsets
+			+ '([_a-zA-Z]\\w*.*?)' // -> type
+			+ '[ \t]*('
+				+ '[_a-zA-Z]\\w*'
+				+ '(?:[ \t]*,[ \t]*[_a-zA-Z]\\w*)*'
+			+ ')' // -> name(s)
+		+ '[ \t]*;', 'g');
+		var rxStructFieldName = ~/([_a-zA-Z]\w*)/g;
+		
 		// `///\nstruct Some { ... }`
 		new EReg("///.*?(~)?" // -> hide
 			+ "\nstruct\\s+(\\w+)" // -> name
@@ -122,17 +131,20 @@ class GenCpp extends GenFile {
 			rxStructField.each(edata, function(rc:EReg) {
 				if (offset == -1) return;
 				var type = rc.matched(1);
-				var name = rc.matched(2);
+				var names = rc.matched(2);
 				var size = sizeofs[type];
 				if (size == null) {
 					Sys.println('Size of $type is not known.');
 					offset = -1;
 					return;
 				}
-				macros.push(new GenMacro(
-					sname + "_" + name, "" + offset,
-					hide, start + rc.matchedPos().pos));
-				offset += size;
+				rxStructFieldName.each(names, function(rn:EReg) {
+					var name = rn.matched(1);
+					macros.push(new GenMacro(
+						sname + "_" + name, "" + offset,
+						hide, start + rc.matchedPos().pos));
+					offset += size;
+				});
 			});
 		});
 	}
