@@ -18,8 +18,8 @@ class GenCpp extends GenFile {
 		
 		//
 		var dllExport = "dllx";
-		new EReg('#define (\\w+) extern "C" __declspec(dllexport)[ \t]*\n',
-		"g").each(code, function(rx:EReg) {
+		~/#define\s+(\w+)\s+extern\s+"C"\s+__declspec\(dllexport\)[ \t]*$/gm
+		.each(code, function(rx:EReg) {
 			dllExport = rx.matched(1);
 		});
 		
