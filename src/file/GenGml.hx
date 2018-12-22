@@ -21,7 +21,10 @@ class GenGml extends file.GenFile {
 		+ "$", "g");
 		var rxGMDoc:EReg = new EReg("^(\\w+)?" // -> display name
 			+ "[ \t]*\\(([^\x29]*)\\)" // -> argData
-			+ "(?:.*?[:][ \t]*(.*))?" // -> doc
+			+ "(?:"
+				+ "(?:(\\-\\>.+?)(?:$|:.*?))?" // typehint (`->type`, `->type : doc`)
+				+ "|[ \t]*:.*?" // doc (` : doc`)
+			+ ")?"
 			+ "(~)?" // -> hide?
 		+ "$", "g");
 		var rxHide = ~/^@hide\b/g;
