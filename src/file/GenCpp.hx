@@ -11,6 +11,7 @@ class GenCpp extends GenFile {
 		"char" => 1, "byte" => 1, "uint8" => 1, "int8" => 1,
 		"short" => 2, "int16" => 2, "uint16" => 2,
 		"int" => 4, "int32" => 4, "uint32" => 4,
+		"float" => 4, "double" => 8,
 	];
 	override public function scan(code:String):Void {
 		super.scan(code);
