@@ -8,6 +8,7 @@ import sys.FileSystem;
  */
 class GenMain {
 	public static var v2:Bool = false;
+	public static var remaps:Array<GenRemap> = [];
 	public static function proc(filter:Array<String>, path:String) {
 		var ext:GenExt = switch (Path.extension(path).toLowerCase()) {
 			case "yy": v2 = true; new GenExt2(path);
@@ -15,9 +16,19 @@ class GenMain {
 		};
 		ext.proc(filter.length > 0 ? filter : null);
 		var paths = [path];
+		var rms:Array<GenRemap> = remaps;
 		for (file in ext.files) {
 			file.proc();
 			paths.push(file.path);
+			for (rm in rms) {
+				var rx = rm.rx, rs = rm.rs;
+				for (func in file.functions) {
+					func.name = rx.replace(func.name, rs);
+				}
+				for (mcr in file.macros) {
+					mcr.name = rx.replace(mcr.name, rs);
+				}
+			}
 		}
 		ext.flush();
 		return paths;
@@ -25,6 +36,22 @@ class GenMain {
 	public static function main() {
 		var args = Sys.args();
 		var watch = args.remove("--watch");
+		//
+		var i = 0;
+		while (i < args.length) {
+			switch (args[i]) {
+				case "--remap": {
+					try {
+						remaps.push({rx:new EReg(args[i + 1], "g"), rs:args[i + 2]});
+					} catch (x:Dynamic) {
+						Sys.println("Couldn't process remap: " + x);
+					}
+					args.splice(i, 3);
+				};
+				default: i += 1;
+			}
+		}
+		//
 		var path = args.shift();
 		if (path == null) {
 			Sys.println("Use: gmxgen [path to .gmx|.yy]");
@@ -65,3 +92,4 @@ class GenMain {
 		}
 	}
 }
+typedef GenRemap = { rx:EReg, rs:String };
