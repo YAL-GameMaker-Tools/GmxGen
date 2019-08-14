@@ -15,10 +15,12 @@ class GenFile {
 	public var macros:Array<GenMacro> = [];
 	public var data:Dynamic;
 	public var funcKind:Int = 1;
+	public var ignore:Bool = false;
 	public function new() {
 		
 	}
 	public function proc():Void {
+		if (ignore) return;
 		Sys.println('Checking `$rel`...');
 		var code:String = File.getContent(path);
 		code = ~/\r\n/g.replace(code, "\n");
@@ -56,6 +58,13 @@ class GenFile {
 			default: return null;
 		}
 		if (!FileSystem.exists(path)) return null;
+		out.path = path;
+		out.rel = rel;
+		return out;
+	}
+	public static function createIgnore(rel:String, path:String) {
+		var out = new GenFile();
+		out.ignore = true;
 		out.path = path;
 		out.rel = rel;
 		return out;

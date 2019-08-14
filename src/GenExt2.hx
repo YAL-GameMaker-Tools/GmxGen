@@ -20,11 +20,25 @@ class GenExt2 extends GenExt {
 		//
 		yyExt = Json.parse(json);
 		for (file in yyExt.files) {
-			if (filter != null && filter.indexOf(file.filename) < 0) continue;
-			var q = GenFile.create(file.filename, Path.join([dir, file.filename]));
-			if (q != null) {
+			var q:GenFile;
+			var filePath = Path.join([dir, file.filename]);
+			if (filter != null && filter.indexOf(file.filename) < 0) {
+				q = GenFile.createIgnore(file.filename, filePath);
 				q.data = file;
-				files.push(q);
+				for (yf in file.functions) {
+					var gf = new GenFunc(yf.name, 0);
+					gf.argCount = yf.argCount;
+					for (arg in yf.args) gf.argTypes.push(arg);
+					gf.retType = yf.returnType;
+					gf.comp = yf.hidden ? null : yf.help;
+					q.functions.push(gf);
+				}
+			} else {
+				q = GenFile.create(file.filename, filePath);
+				if (q != null) {
+					q.data = file;
+					files.push(q);
+				}
 			}
 		}
 	}
