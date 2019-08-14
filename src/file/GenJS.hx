@@ -16,7 +16,7 @@ class GenJS extends GenFile {
 		var rxDoc:EReg = new EReg("^"
 			+ "(?:\\w+)?" // name
 			+ "[ \t]*(?:\\(([^\x29]*)\\))?" // -> argData
-			+ ".*?" // -> desc
+			+ "(.*?)" // -> desc
 			+ "(~)?" // -> hide
 		+ "", "g");
 		var rxNosp = ~/^[-:]/g;
@@ -25,6 +25,8 @@ class GenJS extends GenFile {
 			+ "function(?:[ \t]+(\\w+))?" // -> fname
 			+ "[ \t]*\\(([^\x29]*)\\)" // -> argData
 		+ "", "g")).each(code, function(rx:EReg) {
+			var prec = StringTools.fastCodeAt(code, rx.matchedPos().pos - 1);
+			if (prec == " ".code || prec == "\t".code) return;
 			var i = 0;
 			var doc = rx.matched(++i);
 			var wname = rx.matched(++i);
@@ -35,19 +37,21 @@ class GenJS extends GenFile {
 			var argData = rx.matched(++i);
 			var comp:String = null;
 			var docDesc = null;
+			var docHide = false;
 			if (doc != null && rxDoc.match(doc)) {
 				var docComp = rxDoc.matched(0);
 				i = 0;
 				var docArgs = rxDoc.matched(++i);
 				docDesc = rxDoc.matched(++i);
+				docHide = rxDoc.matched(++i) != null;
 				if (docArgs != null) {
 					argData = docArgs;
 					if (docDesc != null) comp = name + docComp;
 				}
 			}
-			if (comp == null && docDesc != null) {
+			if (comp == null && !docHide) {
 				comp = name + "(" + argData + ")";
-				if (docDesc != "") {
+				if (docDesc != "" && docDesc != null) {
 					if (!rxNosp.match(docDesc)) comp += " : ";
 					comp += docDesc;
 				}
