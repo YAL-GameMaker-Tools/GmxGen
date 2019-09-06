@@ -15,14 +15,16 @@ class GenGml extends file.GenFile {
 	override public function scan(code:String) {
 		super.scan(code);
 		var rxDoc = ~/^[ \t]*\/\/\/[ \t]*(.+)$/gm;
+		var rxRename = ~/^@rename[ \t]+(\w+)/;
 		var rxParam:EReg = new EReg("^@(?:arg|param|argument)"
 			+ "[ \t]+(\\S+)" // -> name
 			+ "[ \t]*(.*)" // -> value
 		+ "$", "g");
+		// func_name(...args)->type : doc
 		var rxGMDoc:EReg = new EReg("^(\\w+)?" // -> display name
 			+ "[ \t]*\\(([^\x29]*)\\)" // -> argData
 			+ "(?:"
-				+ "(?:(\\-\\>.+?)(?:$|:.*?))?" // typehint (`->type`, `->type : doc`)
+				+ "(?:(\\-\\>.*?)(?:$|:.*?))?" // typehint (`->type`, `->type : doc`)
 				+ "|[ \t]*:.*?" // doc (` : doc`)
 			+ ")?"
 			+ "(~)?" // -> hide?
@@ -48,10 +50,19 @@ class GenGml extends file.GenFile {
 			var acomp = null;
 			var asep = false;
 			rxDoc.each(docs, function(rd:EReg) {
-				if (foundFull) return;
 				var trail = rd.matched(1);
-				if (rxHide.match(trail)) {
+				if (rxRename.match(trail)) {
+					var next = rxRename.matched(1);
+					if (fn.comp != null && fn.comp.startsWith(fn.name + "(")) {
+						fn.comp = next + fn.comp.substring(fn.name.length);
+					}
+					fn.name = next;
+				}
+				else if (rxHide.match(trail)) {
 					foundHide = true;
+				}
+				else if (foundFull) {
+					// no params/full docs from hereafter
 				}
 				else if (rxParam.match(trail)) {
 					foundParam = true;
@@ -80,7 +91,7 @@ class GenGml extends file.GenFile {
 					var argData = rxGMDoc.matched(++i).trim();
 					var doc = rxGMDoc.matched(++i);
 					var hide = rxGMDoc.matched(++i);
-					if (dspName == null) comp = name + comp;
+					if (dspName == null) comp = fn.name + comp;
 					fn.comp = hide == null ? comp : null;
 					fn.argTypes.resize(0);
 					if (argData != "") {
@@ -91,7 +102,7 @@ class GenGml extends file.GenFile {
 						} else fn.argCount = -1;
 					} else fn.argCount = 0;
 				}
-			});
+			}); // each
 			if (acomp != null && fn.comp == null) {
 				fn.comp = acomp + ")";
 			}
