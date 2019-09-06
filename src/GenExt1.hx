@@ -16,11 +16,34 @@ class GenExt1 extends GenExt {
 		for (fileRoot in root.findAll("files"))
 		for (file in fileRoot.findAll("file")) {
 			var rel = file.findText("filename");
-			if (filter != null && filter.indexOf(rel) < 0) continue;
-			var q = GenFile.create(rel, Path.join([dir, rel]));
-			if (q != null) {
+			var q:GenFile;
+			var filePath = Path.join([dir, rel]);
+			if (filter != null && filter.indexOf(rel) < 0) {
+				q = GenFile.createIgnore(rel, filePath);
 				q.data = file;
 				files.push(q);
+				for (xf in file.find("functions").findAll("function")) {
+					var gf = new GenFunc(xf.findText("name"), 0);
+					gf.argCount = xf.findInt("argCount");
+					for (xa in xf.find("args").findAll("arg")) {
+						gf.argTypes.push(xa.textAsInt);
+					}
+					gf.retType = xf.findInt("returnType");
+					gf.comp = xf.findText("help");
+					if (gf.comp == "") gf.comp = null;
+					q.functions.push(gf);
+				}
+				for (xm in file.find("constants").findAll("constant")) {
+					var gm = new GenMacro(xm.findText("name"), xm.findText("value"),
+						xm.findInt("hidden") != 0, 0);
+					q.macros.push(gm);
+				}
+			} else {
+				q = GenFile.create(rel, filePath);
+				if (q != null) {
+					q.data = file;
+					files.push(q);
+				}
 			}
 		}
 	}

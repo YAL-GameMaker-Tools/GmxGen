@@ -25,6 +25,7 @@ class GenExt2 extends GenExt {
 			if (filter != null && filter.indexOf(file.filename) < 0) {
 				q = GenFile.createIgnore(file.filename, filePath);
 				q.data = file;
+				files.push(q);
 				for (yf in file.functions) {
 					var gf = new GenFunc(yf.name, 0);
 					gf.argCount = yf.argCount;
@@ -32,6 +33,10 @@ class GenExt2 extends GenExt {
 					gf.retType = yf.returnType;
 					gf.comp = yf.hidden ? null : yf.help;
 					q.functions.push(gf);
+				}
+				for (ym in file.constants) {
+					var gm = new GenMacro(ym.constantName, ym.value, ym.hidden, 0);
+					q.macros.push(gm);
 				}
 			} else {
 				q = GenFile.create(file.filename, filePath);
