@@ -87,7 +87,10 @@ class GenCpp extends GenFile {
 		var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 		// `///\nenum Some { ... }`
 		new EReg("///.*?(~)?" // -> hide
-			+ "\nenum\\s+(?:(class)\\s+)?(\\w+)" // -> name
+			+ "\nenum\\b\\s*"
+			+ "(?:(class)\\b\\s*)?" // -> class
+			+ "(?::\\s*\\w+\\b\\s*)?" // type (opt.)
+			+ "(\\w+)" // -> name
 			+ "\\s+\\{([^\x7d]*)\\}" // -> items (x7d=cubclose)
 		+ "", "g").each(code, function(rx:EReg) {
 			var i = 0;
