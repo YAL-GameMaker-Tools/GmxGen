@@ -32,7 +32,7 @@ class GenCpp extends GenFile {
 				+ "(.*)" // -> doc
 			+ "\n)?"
 			+ '[ \t]*$dllExport'
-			+ '[ \t]+(double|char[ \t]*\\*)' // -> rtype
+			+ '[ \t]+(double|(?:const[ \t]+)?char[ \t]*\\*)' // -> rtype
 			+ '[ \t]+(\\w+)' // -> name
 			+ "[ \t]*\\(([^\\)]*)\\)" // -> argData
 		+ "", "gm").each(code, function(rx:EReg) {
