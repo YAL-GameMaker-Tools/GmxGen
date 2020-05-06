@@ -51,6 +51,8 @@ class GenExt2 extends GenExt {
 		var out = new YyBuf();
 		var filesStartStr = '"files": [';
 		var filesStart = json.indexOf(filesStartStr);
+		if (filesStart < 0) throw "Your extension doesn't have an array of files in it.";
+		if (json.indexOf("\r\n") < 0) out.newLine = "\n";
 		out.addString(json.substring(0, filesStart + filesStartStr.length));
 		out.depth = 2;
 		out.addLine(0);
@@ -122,7 +124,8 @@ class GenExt2 extends GenExt {
 			out.objectClose();
 		}
 		//
-		var filesEnd = json.indexOf('\r\n    ],', filesStart);
+		var filesEnd = json.indexOf('\n    ],', filesStart);
+		if (filesEnd < 0) throw "Your extension doesn't have a well-balanced end of files array in it. It might be malformed.";
 		out.addString(json.substring(filesEnd));
 		json = out.toString();
 		json = ~/("copyToTargets":\s*)"([^"]+)"/g.replace(json, '$1$2');

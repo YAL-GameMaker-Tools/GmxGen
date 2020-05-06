@@ -6,10 +6,11 @@ import haxe.Json;
  * @author YellowAfterlife
  */
 class YyBuf extends StringBuf {
+	public var newLine:String = "\r\n";
 	public var depth:Int = 0;
 	public var sep:Array<Bool> = [false];
 	public function addLine(d:Int = 0) {
-		add("\r\n");
+		add(newLine);
 		if (d > 0) sep.push(false);
 		if (d < 0) sep.pop();
 		depth += d;
