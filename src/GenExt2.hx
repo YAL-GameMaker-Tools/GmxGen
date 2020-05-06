@@ -79,7 +79,7 @@ class GenExt2 extends GenExt {
 				out.addSep();
 				out.objectOpen();
 				out.addPair("id", id);
-				out.addPair("modelName", d.modelName);
+				out.addPair("modelName", "GMExtensionConstant");
 				out.addPair("mvc", d.mvc);
 				out.addPair("constantName", qm.name);
 				out.addPair("hidden", qm.hide);
