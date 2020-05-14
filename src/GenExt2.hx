@@ -22,10 +22,12 @@ class GenExt2 extends GenExt {
 		for (file in yyExt.files) {
 			var q:GenFile;
 			var filePath = Path.join([dir, file.filename]);
-			if (filter != null && filter.indexOf(file.filename) < 0) {
+			if (filter == null || filter.indexOf(file.filename) >= 0) {
+				q = GenFile.create(file.filename, filePath);
+			} else q = null;
+			//
+			if (q == null) {
 				q = GenFile.createIgnore(file.filename, filePath);
-				q.data = file;
-				files.push(q);
 				for (yf in file.functions) {
 					var gf = new GenFunc(yf.name, 0);
 					gf.argCount = yf.argCount;
@@ -38,13 +40,10 @@ class GenExt2 extends GenExt {
 					var gm = new GenMacro(ym.constantName, ym.value, ym.hidden, 0);
 					q.macros.push(gm);
 				}
-			} else {
-				q = GenFile.create(file.filename, filePath);
-				if (q != null) {
-					q.data = file;
-					files.push(q);
-				}
 			}
+			//
+			q.data = file;
+			files.push(q);
 		}
 	}
 	override public function flush():Void {

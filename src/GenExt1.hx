@@ -18,10 +18,13 @@ class GenExt1 extends GenExt {
 			var rel = file.findText("filename");
 			var q:GenFile;
 			var filePath = Path.join([dir, rel]);
-			if (filter != null && filter.indexOf(rel) < 0) {
+			//
+			if (filter == null || filter.indexOf(rel) >= 0) {
+				q = GenFile.create(rel, filePath);
+			} else q = null;
+			//
+			if (q == null) {
 				q = GenFile.createIgnore(rel, filePath);
-				q.data = file;
-				files.push(q);
 				for (xf in file.find("functions").findAll("function")) {
 					var gf = new GenFunc(xf.findText("name"), 0);
 					gf.argCount = xf.findInt("argCount");
@@ -38,13 +41,10 @@ class GenExt1 extends GenExt {
 						xm.findInt("hidden") != 0, 0);
 					q.macros.push(gm);
 				}
-			} else {
-				q = GenFile.create(rel, filePath);
-				if (q != null) {
-					q.data = file;
-					files.push(q);
-				}
 			}
+			//
+			q.data = file;
+			files.push(q);
 		}
 	}
 	override public function flush():Void {
