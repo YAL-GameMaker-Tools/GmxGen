@@ -42,6 +42,10 @@ class YyBuf extends StringBuf {
 				addValue(v);
 			}
 			arrayClose();
+		} else if (Std.is(val, String)) {
+			var s = Json.stringify(val);
+			s = StringTools.replace(s, "/", "\\/"); // off-spec
+			addString(s);
 		} else {
 			addString(Json.stringify(val));
 		}
