@@ -20,19 +20,31 @@ class GenJS extends GenFile {
 			+ "(~)?" // -> hide
 		+ "", "g");
 		var rxNosp = ~/^[-:]/g;
-		(new EReg("(?:///[ \t]*(.*)\n)?" // -> doc
-			+ "(?:window.(\\w+)[ \t]*=[ \t]*)?" // -> wname
-			+ "function(?:[ \t]+(\\w+))?" // -> fname
-			+ "[ \t]*\\(([^\x29]*)\\)" // -> argData
-		+ "", "g")).each(code, function(rx:EReg) {
-			var prec = StringTools.fastCodeAt(code, rx.matchedPos().pos - 1);
-			if (prec == " ".code || prec == "\t".code) return;
+		
+		var ws = "[ \t]*";
+		(new EReg((""
+			+ '(?:\\/\\/\\/(.*)\\s*)?' // -> ?doc
+			+ '(?:window\\.(\\w+)$ws=$ws)?' // -> ?wname
+			+ 'function\\b$ws'
+			+ '(?:(\\w+)$ws)?' // -> ?fname
+			+ '\\((.*?)\\)' // -> argData
+		), "g")).each(code, function(rx:EReg) {
 			var i = 0;
 			var doc = rx.matched(++i);
+			
 			var wname = rx.matched(++i);
-			var name = rx.matched(++i);
-			if (name == null) name = wname;
+			var fname = rx.matched(++i);
+			if (wname == null) {
+				// if it's not a `window.fn = ...`, we don't want it indented
+				// (as that might mean that it's inside a closure)
+				var prec = StringTools.fastCodeAt(code, rx.matchedPos().pos - 1);
+				if (prec == " ".code || prec == "\t".code) return;
+			}
+			
+			var name = wname;
+			if (name == null) name = fname;
 			if (name == null) return;
+			
 			var fn = new GenFunc(name, rx.matchedPos().pos);
 			var argData = rx.matched(++i);
 			var comp:String = null;
