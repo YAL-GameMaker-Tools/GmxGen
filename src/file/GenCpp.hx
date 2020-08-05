@@ -84,14 +84,22 @@ class GenCpp extends GenFile {
 			macros.push(new GenMacro(name, value, hide, pos));
 		});
 		
-		var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
+		var rxEnumCtr = new EReg(
+			"([_a-zA-Z]\\w*)" // -> name
+			+ "(?:"
+				+ "\\s*=\\s*"
+				+ "(-?\\d+|0x[0-9a-fA-F]+)" // -> value
+			+ ")?"
+			+ "\\s*(?:,|$)"
+		, "g");
+		//var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 		// `///\nenum Some { ... }`
 		new EReg("///.*?(~)?" // -> hide
-			+ "\nenum\\b\\s*"
+			+ "\n[ \t]*enum\\b\\s*"
 			+ "(?:(class)\\b\\s*)?" // -> class
+			+ "(\\w+)\\b\\s*" // -> name
 			+ "(?::\\s*\\w+\\b\\s*)?" // type (opt.)
-			+ "(\\w+)" // -> name
-			+ "\\s+\\{([^\x7d]*)\\}" // -> items (x7d=cubclose)
+			+ "\\{([\\s\\S]*?)\\}" // -> items
 		+ "", "g").each(code, function(rx:EReg) {
 			var i = 0;
 			var hide = rx.matched(++i) != null;
