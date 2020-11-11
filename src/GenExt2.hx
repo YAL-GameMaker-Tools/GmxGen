@@ -14,7 +14,9 @@ class GenExt2 extends GenExt {
 	public var yyExt:YyExtension;
 	override public function proc(filter:Array<String>) {
 		var dir = Path.directory(path);
-		json = File.getContent(path);
+		if (FileSystem.exists(path + ".base")) {
+			json = File.getContent(path + ".base");
+		} else json = File.getContent(path);
 		// GMS2 uses non-spec int64s in extensions JSON
 		json = ~/("copyToTargets":\s*)(\d{12,32})/g.replace(json, '$1"$2"');
 		//
