@@ -36,7 +36,8 @@ typedef YyExtensionFunc = {
 }
 typedef YyExtensionMacro = {
 	>YyBase,
-	constantName:String,
+	?constantName:String,
+	?name:String,
 	hidden:Bool,
 	value:String,
 }
