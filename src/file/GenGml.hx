@@ -8,9 +8,44 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenGml extends file.GenFile {
+	/** Generally 1.4, 2.2, or 2.3 */
+	public static var version:Float = 2.3;
 	public function new() {
 		super();
 		funcKind = 2;
+	}
+	override public function patch(code:String):String {
+		var changed = false;
+		code = (new EReg("/([/*])(" // -> prefix, line without prefix
+			+ "(?:\\s*\\()?" // opt. (
+			+ "\\s*GMS"
+			+ "\\s*(==|!=|>=|>|<=|<)" // -> operator
+			+ "\\s*(\\d+(?:\\.[\\d*]))" // -> version
+			+ "(?:\\s*\\))?" // opt. )
+		+ ":)", "g")).map(code, function(rx:EReg) {
+			var gr = 0;
+			var pre = rx.matched(++gr);
+			var line = rx.matched(++gr);
+			var op = rx.matched(++gr);
+			var verStr = rx.matched(++gr);
+			var ver = Std.parseFloat(verStr);
+			if (Math.isNaN(ver)) return rx.matched(0);
+			var active = switch (op) {
+				case "==": version == ver;
+				case "!=": version != ver;
+				case ">=": version >= ver;
+				case "<=": version <= ver;
+				case ">": version > ver;
+				case "<": version < ver;
+				default: false;
+			};
+			var np = (active ? "//" : "/*");
+			if (np != pre) {
+				changed = true;
+				return np + line;
+			} else return rx.matched(0);
+		});
+		return changed ? code : null;
 	}
 	override public function scan(code:String) {
 		super.scan(code);

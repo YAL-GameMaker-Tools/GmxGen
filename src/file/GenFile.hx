@@ -23,12 +23,20 @@ class GenFile {
 		if (ignore) return;
 		Sys.println('Checking `$rel`...');
 		var code:String = File.getContent(path);
+		var pcode = patch(code);
+		if (pcode != null) {
+			code = pcode;
+			File.saveContent(path, pcode);
+		}
 		code = ~/\r\n/g.replace(code, "\n");
 		//
 		scan(code);
 		//
 		functions.sort(function(a, b) return a.pos - b.pos);
 		macros.sort(function(a, b) return a.pos - b.pos);
+	}
+	public function patch(code:String):String {
+		return null;
 	}
 	public function scan(code:String):Void {
 		(new EReg("//(#macro)" // -> kind

@@ -20,6 +20,7 @@ class GenExt2 extends GenExt {
 			json = File.getContent(path + ".base");
 		} else json = File.getContent(path);
 		v23 = json.indexOf('"resourceType": "GMExtension"') >= 0;
+		GenGml.version = v23 ? 2.3 : 2.2;
 		// GMS2 uses non-spec int64s in extensions JSON
 		json = ~/("copyToTargets":\s*)(\d{12,32})/g.replace(json, '$1"$2"');
 		//
