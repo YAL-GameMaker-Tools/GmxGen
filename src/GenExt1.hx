@@ -1,6 +1,7 @@
 package;
 import file.GenGml;
 import haxe.io.Path;
+import sys.FileSystem;
 import sys.io.File;
 import file.GenFile;
 
@@ -13,8 +14,12 @@ class GenExt1 extends GenExt {
 	override public function proc(filter:Array<String>) {
 		GenGml.version = 1.4;
 		var extName = Path.withoutDirectory(Path.withoutExtension(Path.withoutExtension(path)));
+		var gmxText:String;
+		if (FileSystem.exists(path + ".base")) {
+			gmxText = File.getContent(path + ".base");
+		} else gmxText = File.getContent(path);
 		var dir = Path.join([Path.directory(path), extName]);
-		root = SfGmx.parse(File.getContent(path));
+		root = SfGmx.parse(gmxText);
 		for (fileRoot in root.findAll("files"))
 		for (file in fileRoot.findAll("file")) {
 			var rel = file.findText("filename");
