@@ -72,7 +72,9 @@ class GenMain {
 			return;
 		}
 		if (!FileSystem.exists(path) || FileSystem.isDirectory(path)) {
-			if (FileSystem.exists(path + ".extension.gmx")) {
+			if (FileSystem.exists(path + ".base")) {
+				// that's OK
+			} else if (FileSystem.exists(path + ".extension.gmx")) {
 				path += ".extension.gmx";
 			} else if (FileSystem.exists(path + ".yy")) {
 				path += ".yy";
