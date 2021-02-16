@@ -34,7 +34,7 @@ class GenMain {
 		ext.flush();
 		return paths;
 	}
-	static function mtimeOf(path:String):Float {
+	public static function mtimeOf(path:String):Float {
 		try {
 			return FileSystem.stat(path).mtime.getTime();
 		} catch (x:Dynamic) {
@@ -46,7 +46,6 @@ class GenMain {
 		var watch = args.remove("--watch");
 		//
 		var i = 0;
-		var copyList = [];
 		while (i < args.length) {
 			switch (args[i]) {
 				case "--remap": {
@@ -58,9 +57,7 @@ class GenMain {
 					args.splice(i, 3);
 				};
 				case "--copy": {
-					var from = args[i + 1];
-					var mtime = mtimeOf(from);
-					copyList.push({ from: from, to: args[i + 2], mtime: mtime });
+					GenCopy.add(args[i + 1], args[i + 2]);
 					args.splice(i, 3);
 				};
 				default: i += 1;
@@ -90,28 +87,7 @@ class GenMain {
 		} else dir = Path.directory(path);
 		Sys.println('Running GmxGen for "$path"...');
 		//
-		if (copyList.length > 0) {
-			var rxArch = ~/^(.+):(\w+)$/;
-			for (pair in copyList) {
-				var to = pair.to;
-				if (rxArch.match(to)) {
-					var tp = new Path(rxArch.matched(1));
-					var arch = rxArch.matched(2);
-					if (arch != "x86") tp.ext = arch + "." + tp.ext;
-					to = tp.toString();
-				}
-				var tp = new Path(to);
-				if (tp.dir == null) tp.dir = dir;
-				pair.to = tp.toString();
-				File.copy(pair.from, pair.to);
-				try {
-					File.copy(pair.from, pair.to);
-					Sys.println('Copied `${pair.from}` to `${pair.to}`');
-				} catch (x:Dynamic) {
-					Sys.println('Failed to copy `${pair.from}` to `${pair.to}`: $x');
-				}
-			}
-		}
+		GenCopy.ready(dir);
 		//
 		var paths = proc(args, path);
 		var mtime = mtimeOf(path);
@@ -125,18 +101,7 @@ class GenMain {
 						upd = true; break;
 					}
 				}
-				for (pair in copyList) {
-					var cmt = mtimeOf(pair.from);
-					if (cmt > pair.mtime) {
-						pair.mtime = cmt;
-						try {
-							File.copy(pair.from, pair.to);
-							Sys.println('Copied `${pair.from}` to `${pair.to}`');
-						} catch (x:Dynamic) {
-							Sys.println('Failed to copy `${pair.from}` to `${pair.to}`: $x');
-						}
-					}
-				}
+				GenCopy.update();
 				if (!upd) continue;
 				Sys.println("[" + Date.now().toString() + "] Update");
 				paths = proc(args, path);
