@@ -39,12 +39,14 @@ class GenFile {
 		return null;
 	}
 	public function scan(code:String):Void {
+		// don't process macros inside multi-line comments
+		var ncCode = ~/\/\*.+?\*\//g.replace(code, "");
 		(new EReg("//(#macro)" // -> kind
 			+ "[ \t]+(\\w+)" // -> name
 			+ "[ \t]+(.+?)" // -> value
 			+ "(:.+?)?" // -> doc
 			+ "(~)?" // -> hide
-		+ "$", "gm")).each(code, function(rx:EReg) {
+		+ "$", "gm")).each(ncCode, function(rx:EReg) {
 			var i = 0;
 			var kind = rx.matched(++i);
 			var name = rx.matched(++i);
