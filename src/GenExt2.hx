@@ -14,13 +14,16 @@ class GenExt2 extends GenExt {
 	public var json:String;
 	public var yyExt:YyExtension;
 	public var v23:Bool;
-	override public function proc(filter:Array<String>) {
-		var dir = Path.directory(path);
+	public function new(path:String) {
+		super(path);
 		if (FileSystem.exists(path + ".base")) {
 			json = File.getContent(path + ".base");
 		} else json = File.getContent(path);
 		v23 = json.indexOf('"resourceType": "GMExtension"') >= 0;
 		GenGml.version = v23 ? 2.3 : 2.2;
+	}
+	override public function proc(filter:Array<String>) {
+		var dir = Path.directory(path);
 		// GMS2 uses non-spec int64s in extensions JSON
 		json = ~/("copyToTargets":\s*)(\d{12,32})/g.replace(json, '$1"$2"');
 		//

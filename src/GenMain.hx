@@ -10,11 +10,15 @@ import sys.io.File;
 class GenMain {
 	public static var v2:Bool = false;
 	public static var remaps:Array<GenRemap> = [];
-	public static function proc(filter:Array<String>, path:String) {
-		var ext:GenExt = switch (Path.extension(path).toLowerCase()) {
+	public static var extension:GenExt;
+	public static function procStart(path:String) {
+		extension = switch (Path.extension(path).toLowerCase()) {
 			case "yy": v2 = true; new GenExt2(path);
 			default: v2 = false; new GenExt1(path);
 		};
+	}
+	public static function proc(filter:Array<String>, path:String) {
+		var ext = extension;
 		ext.proc(filter.length > 0 ? filter : null);
 		var paths = [path];
 		var rms:Array<GenRemap> = remaps;
@@ -89,6 +93,7 @@ class GenMain {
 		} else dir = Path.directory(path);
 		Sys.println('Running GmxGen for "$path"...');
 		//
+		procStart(path);
 		GenCopy.ready(dir);
 		//
 		var paths = proc(args, path);

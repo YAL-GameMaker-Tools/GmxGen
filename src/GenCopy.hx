@@ -21,7 +21,10 @@ class GenCopy {
 			if (rxArch.match(to)) {
 				var tp = new Path(rxArch.matched(1));
 				var arch = rxArch.matched(2);
-				if (arch != "x86") tp.ext = arch + "_" + tp.ext;
+				if (arch != "x86") {
+					tp.file += "_" + arch;
+					item.isNonX86 = true;
+				}
 				to = tp.toString();
 			}
 			
@@ -46,11 +49,14 @@ class GenCopy {
 	}
 	
 	static var mtimes:Map<String, Float> = new Map();
-	static function check(from:String) {
+	static function check(from:String, nonX86:Bool) {
 		var t0 = mtimes[from];
 		var t1 = GenMain.mtimeOf(from);
 		if (t0 == null || t0 < t1) {
 			mtimes[from] = t1;
+			// avoid copying x64 DLLs to pre-2.3 projects:
+			trace(from, nonX86, Path.extension(from), file.GenGml.version);
+			if (nonX86 && Path.extension(from).toLowerCase() == "dll" && file.GenGml.version < 2.3) return false;
 			return true;
 		} else return false;
 	}
@@ -68,7 +74,7 @@ class GenCopy {
 		for (item in items) {
 			var frx = item.fromRx;
 			if (frx == null) {
-				if (check(item.from)) copy(item.from, item.to);
+				if (check(item.from, item.isNonX86)) copy(item.from, item.to);
 				continue;
 			}
 			var dir = item.fromDir;
@@ -77,14 +83,15 @@ class GenCopy {
 				if (!frx.match(rel)) continue;
 				var full = Path.join([dir, rel]);
 				found += 1;
-				if (!check(full)) continue;
+				if (!check(full, item.isNonX86)) continue;
 				var tb = new StringBuf();
 				var idx = -1;
 				for (part in item.toParts) {
 					if (++idx > 0) tb.add(frx.matched(idx));
 					tb.add(part);
 				}
-				copy(full, tb.toString());
+				var tp = tb.toString();
+				copy(full, tp);
 			}
 			if (found == 0) Sys.println('No matches for ${item.fromRs}');
 		}
@@ -97,6 +104,7 @@ class GenCopyItem {
 	public var fromRs:String = null;
 	public var to:String;
 	public var toParts:Array<String> = [];
+	public var isNonX86:Bool = false;
 	public function new(from:String, to:String) {
 		this.from = from;
 		this.to = to;
