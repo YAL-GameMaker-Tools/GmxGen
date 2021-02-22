@@ -47,7 +47,7 @@ class YyBuf extends StringBuf {
 		if (v23) addString(",");
 	}
 	public function addValue(val:Dynamic) {
-		if (Std.is(val, Array)) {
+		if (val is Array) {
 			var arr:Array<Dynamic> = val;
 			if (v23 && arr.length == 0) {
 				addString("[]");
@@ -61,7 +61,7 @@ class YyBuf extends StringBuf {
 				arrayClose();
 			}
 		}
-		else if (Std.is(val, String)) {
+		else if (val is String) {
 			var s = Json.stringify(val);
 			if (!v23) s = StringTools.replace(s, "/", "\\/"); // off-spec
 			addString(s);

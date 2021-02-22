@@ -14,7 +14,7 @@ class GenCopy {
 	}
 	public static function ready(dir:String) {
 		var rxArch = ~/^(.+):(\w+)$/;
-		var rxRxEsc = new EReg('([.+?^${}()|[\\]\\/\\\\])', 'g'); // no *
+		var rxRxEsc = new EReg("([.+?^${}()|[\\]\\/\\\\])", 'g'); // no *
 		for (item in items) {
 			var to = item.to;
 			// process `:arch` suffix in $to:
