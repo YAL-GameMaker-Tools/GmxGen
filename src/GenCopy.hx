@@ -55,7 +55,7 @@ class GenCopy {
 		if (t0 == null || t0 < t1) {
 			mtimes[from] = t1;
 			// avoid copying x64 DLLs to pre-2.3 projects:
-			trace(from, nonX86, Path.extension(from), file.GenGml.version);
+			//trace(from, nonX86, Path.extension(from), file.GenGml.version);
 			if (nonX86 && Path.extension(from).toLowerCase() == "dll" && file.GenGml.version < 2.3) return false;
 			return true;
 		} else return false;
