@@ -64,9 +64,12 @@ class GenCopy {
 	static function copy(from:String, to:String) {
 		try {
 			File.copy(from, to);
-			Sys.println('Copied "$from" to "$to"');
+			Sys.println('Copied "$from"');
+			Sys.println('    to "$to"');
 		} catch (x:Dynamic) {
-			Sys.println('Failed to copy "$from" to "$to": $x');
+			Sys.println('Failed to copy "$from"');
+			Sys.println('            to "$to"');
+			Sys.println('        reason: $x');
 		}
 	}
 	

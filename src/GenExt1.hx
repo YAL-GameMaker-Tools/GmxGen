@@ -41,12 +41,12 @@ class GenExt1 extends GenExt {
 					gf.retType = xf.findInt("returnType");
 					gf.comp = xf.findText("help");
 					if (gf.comp == "") gf.comp = null;
-					q.functions.push(gf);
+					q.addFunction(gf);
 				}
 				for (xm in file.find("constants").findAll("constant")) {
 					var gm = new GenMacro(xm.findText("name"), xm.findText("value"),
 						xm.findInt("hidden") != 0, 0);
-					q.macros.push(gm);
+					q.addMacro(gm);
 				}
 			}
 			//
@@ -60,7 +60,7 @@ class GenExt1 extends GenExt {
 			//
 			var gmacros = gfile.find("constants");
 			gmacros.children.resize(0);
-			for (qm in q.macros) {
+			for (qm in q.macroList) {
 				var gm = new SfGmx("constant");
 				gm.addChild(new SfGmx("name", qm.name));
 				gm.addChild(new SfGmx("value", qm.value));
@@ -71,7 +71,7 @@ class GenExt1 extends GenExt {
 			var fkin = q.funcKind;
 			var gfuncs = gfile.find("functions");
 			gfuncs.children.resize(0);
-			for (qf in q.functions) {
+			for (qf in q.functionList) {
 				var gf = new SfGmx("function");
 				gf.addChild(new SfGmx("name", qf.name));
 				gf.addChild(new SfGmx("externalName", qf.extName));

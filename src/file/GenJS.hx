@@ -77,7 +77,7 @@ class GenJS extends GenFile {
 					for (i in 0 ... n) fn.argTypes.push(GenType.Value);
 				} else fn.argCount = -1;
 			} else fn.argCount = 0;
-			functions.push(fn);
+			addFunction(fn);
 		});
 	}
 }

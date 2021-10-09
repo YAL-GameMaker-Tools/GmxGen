@@ -27,10 +27,10 @@ class GenMain {
 			paths.push(file.path);
 			for (rm in rms) {
 				var rx = rm.rx, rs = rm.rs;
-				for (func in file.functions) {
+				for (func in file.functionList) {
 					func.name = rx.replace(func.name, rs);
 				}
-				for (mcr in file.macros) {
+				for (mcr in file.macroList) {
 					mcr.name = rx.replace(mcr.name, rs);
 				}
 			}

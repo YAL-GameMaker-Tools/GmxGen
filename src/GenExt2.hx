@@ -43,13 +43,13 @@ class GenExt2 extends GenExt {
 					for (arg in yf.args) gf.argTypes.push(arg);
 					gf.retType = yf.returnType;
 					gf.comp = yf.hidden ? null : yf.help;
-					q.functions.push(gf);
+					q.addFunction(gf);
 				}
 				for (ym in file.constants) {
 					var ymName = ym.name;
 					if (ymName == null) ymName = ym.constantName;
 					var gm = new GenMacro(ymName, ym.value, ym.hidden, 0);
-					q.macros.push(gm);
+					q.addMacro(gm);
 				}
 			}
 			//
@@ -76,7 +76,7 @@ class GenExt2 extends GenExt {
 			out.addField("constants");
 			out.arrayOpen();
 			var order = [];
-			for (qm in q.macros) {
+			for (qm in q.macroList) {
 				var id = mm[qm.name];
 				if (id == null) id = new YyGUID();
 				order.push(id);
@@ -99,7 +99,7 @@ class GenExt2 extends GenExt {
 			out.addField("functions");
 			out.arrayOpen();
 			var fkin = q.funcKind;
-			for (qf in q.functions) {
+			for (qf in q.functionList) {
 				var id = fm[qf.name];
 				if (id == null) id = new YyGUID();
 				out.addSep();
@@ -145,7 +145,7 @@ class GenExt2 extends GenExt {
 			out.arrayOpen();
 			var fkin = q.funcKind;
 			var funcSep = false;
-			for (qf in q.functions) {
+			for (qf in q.functionList) {
 				if (funcSep) out.addLine(); else funcSep = true;
 				out.objectOpen();
 				out.addPair("externalName", qf.extName);
@@ -168,7 +168,7 @@ class GenExt2 extends GenExt {
 			out.addField("constants");
 			out.arrayOpen();
 			var macroSep = false;
-			for (qm in q.macros) {
+			for (qm in q.macroList) {
 				if (macroSep) out.addLine(); else macroSep = true;
 				out.objectOpen();
 				out.addPair("value", qm.value);
@@ -189,7 +189,7 @@ class GenExt2 extends GenExt {
 			out.addField("order");
 			out.arrayOpen();
 			var orderSep = false;
-			for (qf in q.functions) {
+			for (qf in q.functionList) {
 				if (orderSep) out.addLine(); else orderSep = true;
 				out.objectOpen();
 				out.addPair("name", qf.name);

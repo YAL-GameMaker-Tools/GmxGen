@@ -152,7 +152,7 @@ class GenGml extends file.GenFile {
 					fn.argCount = i + 1;
 				}
 			}
-			functions.push(fn);
+			addFunction(fn);
 		});
 		//
 		(new EReg("//(#global)" // -> kind
@@ -163,7 +163,7 @@ class GenGml extends file.GenFile {
 			var kind = rx.matched(++i);
 			var name = rx.matched(++i);
 			var hide = rx.matched(++i) != null;
-			macros.push(new GenMacro(name, "global.g_" + name, hide, rx.matchedPos().pos));
+			addMacro(new GenMacro(name, "global.g_" + name, hide, rx.matchedPos().pos));
 		});
 	}
 }

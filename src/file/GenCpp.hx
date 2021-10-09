@@ -57,9 +57,10 @@ class GenCpp extends GenFile {
 				}
 				rxStructFieldName.each(names, function(rn:EReg) {
 					var name = rn.matched(1);
-					macros.push(new GenMacro(
+					addMacro(new GenMacro(
 						sname + "_" + name, "" + offset,
-						hide, start + rc.matchedPos().pos));
+						hide, start + rc.matchedPos().pos
+					));
 					offset += size;
 				});
 			});
@@ -115,11 +116,11 @@ class GenCpp extends GenFile {
 			} else fn.argCount = 0;
 			if (hasDoc) {
 				comp += ")";
-				if (docType != null) comp += " " + docType;
+				if (docType != null) comp += docType;
 				if (doc != null && doc != "") comp += " : " + doc;
 				fn.comp = comp;
 			}
-			functions.push(fn);
+			addFunction(fn);
 		});
 		
 		// `///\n#define name value`
@@ -133,7 +134,7 @@ class GenCpp extends GenFile {
 			var name = rx.matched(++i);
 			var value = rx.matched(++i);
 			var pos = rx.matchedPos().pos;
-			macros.push(new GenMacro(name, value, hide, pos));
+			addMacro(new GenMacro(name, value, hide, pos));
 		});
 		
 		var rxEnumCtr = new EReg(
@@ -165,7 +166,7 @@ class GenCpp extends GenFile {
 				if (eclass) name = ename + "_" + name;
 				var value = rc.matched(2);
 				var curr = value != null ? Std.parseInt(value) : next;
-				macros.push(new GenMacro(name, "" + curr, hide, start + rc.matchedPos().pos));
+				addMacro(new GenMacro(name, "" + curr, hide, start + rc.matchedPos().pos));
 				next = curr + 1;
 			});
 		});

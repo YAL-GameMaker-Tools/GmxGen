@@ -11,8 +11,33 @@ using GenTools;
 class GenFile {
 	public var rel:String;
 	public var path:String;
-	public var functions:Array<GenFunc> = [];
-	public var macros:Array<GenMacro> = [];
+	
+	public var functionList:Array<GenFunc> = [];
+	public var functionMap:Map<String, GenFunc> = new Map();
+	public function addFunction(f:GenFunc) {
+		var of = functionMap[f.name];
+		if (of != null) {
+			if (of.comp == null && f.comp != null) {
+				functionList.remove(of);
+			} else return;
+		}
+		functionList.push(f);
+		functionMap[f.name] = f;
+	}
+	
+	public var macroList:Array<GenMacro> = [];
+	public var macroMap:Map<String, GenMacro> = new Map();
+	public function addMacro(m:GenMacro) {
+		var om = macroMap[m.name];
+		if (om != null) {
+			if (om.hide && !m.hide) {
+				macroList.remove(om);
+			} else return;
+		}
+		macroList.push(m);
+		macroMap[m.name] = m;
+	}
+	
 	public var data:Dynamic;
 	public var funcKind:Int = 1;
 	public var ignore:Bool = false;
@@ -32,8 +57,8 @@ class GenFile {
 		//
 		scan(code);
 		//
-		functions.sort(function(a, b) return a.pos - b.pos);
-		macros.sort(function(a, b) return a.pos - b.pos);
+		functionList.sort(function(a, b) return a.pos - b.pos);
+		macroList.sort(function(a, b) return a.pos - b.pos);
 	}
 	public function patch(code:String):String {
 		return null;
@@ -53,7 +78,7 @@ class GenFile {
 			var value = StringTools.trim(rx.matched(++i));
 			var doc = rx.matched(++i);
 			var hide = rx.matched(++i) != null;
-			macros.push(new GenMacro(name, value, hide, rx.matchedPos().pos));
+			addMacro(new GenMacro(name, value, hide, rx.matchedPos().pos));
 		});
 	}
 	public static function create(rel:String, path:String) {
