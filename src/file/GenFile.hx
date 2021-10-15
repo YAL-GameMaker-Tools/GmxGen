@@ -85,14 +85,26 @@ class GenFile {
 		var out:GenFile;
 		switch (Path.extension(rel).toLowerCase()) {
 			case "dll", "dylib", "so": {
-				path = Path.withoutExtension(path) + ".cpp";
-				out = new GenCpp();
+				var tp:String;
+				if (FileSystem.exists(tp = Path.withExtension(path, "cpp"))) {
+					path = tp;
+					out = new GenCpp();
+				} else if (FileSystem.exists(tp = Path.withExtension(path, "h"))) {
+					path = tp;
+					out = new GenCpp();
+				} else if (FileSystem.exists(tp = Path.withExtension(path, "c"))) {
+					path = tp;
+					out = new GenCpp();
+				} else if (FileSystem.exists(tp = Path.withExtension(path, "cs"))) {
+					path = tp;
+					out = new GenCs();
+				} else return null;
 			};
 			case "gml": out = new GenGml();
 			case "js": out = new GenJS();
 			default: return null;
 		}
-		if (!FileSystem.exists(path)) return null;
+		if (path == null || !FileSystem.exists(path)) return null;
 		out.path = path;
 		out.rel = rel;
 		return out;

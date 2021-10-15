@@ -23,14 +23,14 @@ class GenCpp extends GenFile {
 		
 		// `/// doc\nDLLEXPORT double func(double arg)` -> visible
 		// `DLLEXPORT char*(some* arg)` -> hidden
-		var rxArg = ~/^\s*(double)?.+?(\w+)\s*$/g;
+		var rxArg = ~/^\s*(double)?.+?(\w+)\s*$/g; // 1: is non-pointer, 2: name
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
 				+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
 				+ "(.*)" // -> doc
 			+ "\n)?"
 			+ '[ \t]*$dllExport'
-			+ '[ \t]+(double|(?:const[ \t]+)?char[ \t]*\\*)' // -> rtype
+			+ '[ \t]+(void|double|(?:const[ \t]+)?char[ \t]*\\*)' // -> rtype
 			+ '[ \t]+(\\w+)' // -> name
 			+ "[ \t]*\\(([^\\)]*)\\)" // -> argData
 		+ "", "gm").each(code, function(rx:EReg) {
@@ -55,7 +55,7 @@ class GenCpp extends GenFile {
 						}
 						fn.argTypes.push(rxArg.matched(1) != null
 							? GenType.Value : GenType.Pointer);
-					} else throw "Can't match " + arg;
+					} else throw 'Can\'t match argument `$arg` in function $name';
 				}
 				fn.argCount = argSplit.length;
 			} else fn.argCount = 0;
