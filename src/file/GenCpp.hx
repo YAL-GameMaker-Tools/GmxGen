@@ -1,5 +1,6 @@
 package file;
 import file.GenCppAutoStruct;
+import file.GenCppStructOffsets;
 import haxe.io.Path;
 import sys.io.File;
 using GenTools;
@@ -10,62 +11,6 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenCpp extends GenFile {
-	public static var sizeofs:Map<String, Int> = [
-		"char" => 1, "byte" => 1, "uint8" => 1, "int8" => 1,
-		"short" => 2, "int16" => 2, "uint16" => 2,
-		"int" => 4, "int32" => 4, "uint32" => 4,
-		"float" => 4, "double" => 8,
-	];
-	static var cppTypeToGmlBufferType:Map<String, String> = [
-		"char" => "s8", "int8_t" => "s8",
-		"unsigned char" => "u8", "uint8_t" => "u8", "byte" => "u8",
-		"int" => "s32", "int32_t" => "s32",
-		"unsigned int" => "u32", "uint32_t" => "u32",
-		"float" => "f32", "double" => "f64",
-	];
-	function scanStructOffsets(code:String):Void {
-		var rxStructField = new EReg(''
-			+ '(?:unsigned[ \t]+)?' // we don't care if it's unsigned for offsets
-			+ '([_a-zA-Z]\\w*.*?)' // -> type
-			+ '[ \t]*('
-				+ '[_a-zA-Z]\\w*'
-				+ '(?:[ \t]*,[ \t]*[_a-zA-Z]\\w*)*'
-			+ ')' // -> name(s)
-		+ '[ \t]*;', 'g');
-		var rxStructFieldName = ~/([_a-zA-Z]\w*)/g;
-		
-		// `///\nstruct Some { ... }`
-		new EReg("///.*?(~)?" // -> hide
-			+ "\nstruct\\s+(\\w+)" // -> name
-			+ "\\s+\\{([^\x7d]*)\\}" // -> items (x7d=cubclose)
-		+ "", "g").each(code, function(rx:EReg) {
-			var i = 0;
-			var hide = rx.matched(++i) != null;
-			var sname = rx.matched(++i);
-			var edata = rx.matched(++i).stripComments();
-			var start = rx.matchedPos().pos;
-			var offset = 0;
-			rxStructField.each(edata, function(rc:EReg) {
-				if (offset == -1) return;
-				var type = rc.matched(1);
-				var names = rc.matched(2);
-				var size = sizeofs[type];
-				if (size == null) {
-					Sys.println('Size of $type is not known.');
-					offset = -1;
-					return;
-				}
-				rxStructFieldName.each(names, function(rn:EReg) {
-					var name = rn.matched(1);
-					addMacro(new GenMacro(
-						sname + "_" + name, "" + offset,
-						hide, start + rc.matchedPos().pos
-					));
-					offset += size;
-				});
-			});
-		});
-	}
 	override public function scan(code:String):Void {
 		super.scan(code);
 		
@@ -183,6 +128,6 @@ class GenCpp extends GenFile {
 				File.saveContent(asp, gml1);
 			}
 		});
-		if (!autoStructs) scanStructOffsets(code);
+		if (!autoStructs) GenCppStructOffsets.scanStructOffsets(this, code);
 	}
 }
