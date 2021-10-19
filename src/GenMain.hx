@@ -45,8 +45,7 @@ class GenMain {
 			return 0;
 		}
 	}
-	public static function main() {
-		var args = Sys.args();
+	public static function mainImpl(args:Array<String>) {
 		var watch = args.remove("--watch");
 		//
 		var i = 0;
@@ -116,6 +115,13 @@ class GenMain {
 			} catch (x:Dynamic) {
 				Sys.println(x);
 			}
+		}
+	}
+	public static function main() {
+		try {
+			mainImpl(Sys.args());
+		} catch (x:Dynamic) {
+			Sys.println(x);
 		}
 	}
 }
