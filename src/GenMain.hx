@@ -11,6 +11,7 @@ class GenMain {
 	public static var v2:Bool = false;
 	public static var remaps:Array<GenRemap> = [];
 	public static var extension:GenExt;
+	public static var helperPrefix:String = null;
 	public static function procStart(path:String) {
 		extension = switch (Path.extension(path).toLowerCase()) {
 			case "yy": v2 = true; new GenExt2(path);
@@ -48,23 +49,24 @@ class GenMain {
 	public static function mainImpl(args:Array<String>) {
 		var watch = args.remove("--watch");
 		//
+		inline function procRemap(arr:Array<GenRemap>, from:String, to:String):Void {
+			try {
+				arr.push({rx:new EReg(from, "g"), rs:to});
+			} catch (x:Dynamic) {
+				Sys.println("Couldn't process remap: " + x);
+			}
+		}
 		var i = 0;
 		while (i < args.length) {
-			switch (args[i]) {
-				case "--remap": {
-					try {
-						remaps.push({rx:new EReg(args[i + 1], "g"), rs:args[i + 2]});
-					} catch (x:Dynamic) {
-						Sys.println("Couldn't process remap: " + x);
-					}
-					args.splice(i, 3);
-				};
-				case "--copy": {
-					GenCopy.add(args[i + 1], args[i + 2]);
-					args.splice(i, 3);
-				};
-				default: i += 1;
+			var del = switch (args[i]) {
+				case "--remap": procRemap(remaps, args[i + 1], args[i + 2]); 3;
+				case "--copy": GenCopy.add(args[i + 1], args[i + 2]); 3;
+				case "--helper-prefix": helperPrefix = args[i + 1]; 2;
+				default: 0;
 			}
+			if (del > 0) {
+				args.splice(i, del);
+			} else i += 1;
 		}
 		//
 		var path = args.shift();
@@ -121,7 +123,8 @@ class GenMain {
 		try {
 			mainImpl(Sys.args());
 		} catch (x:Dynamic) {
-			Sys.println(x);
+			Sys.println(Path.withoutDirectory(extension.path) + ": error 1: " + x);
+			Sys.exit(1);
 		}
 	}
 }

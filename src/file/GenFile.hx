@@ -3,6 +3,7 @@ import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 using GenTools;
+using StringTools;
 
 /**
  * ...
@@ -11,6 +12,7 @@ using GenTools;
 class GenFile {
 	public var rel:String;
 	public var path:String;
+	public var origPath:String;
 	
 	public var functionList:Array<GenFunc> = [];
 	public var functionMap:Map<String, GenFunc> = new Map();
@@ -83,6 +85,7 @@ class GenFile {
 	}
 	public static function create(rel:String, path:String) {
 		var out:GenFile;
+		var origPath = path;
 		switch (Path.extension(rel).toLowerCase()) {
 			case "dll", "dylib", "so": {
 				var tp:String;
@@ -101,10 +104,20 @@ class GenFile {
 				} else return null;
 			};
 			case "gml": out = new GenGml();
-			case "js": out = new GenJS();
+			case "js": {
+				if (Path.withoutExtension(rel).endsWith("_wasm")) { // name_wasm.js -> name.cpp
+					var pt = new Path(path);
+					pt.ext = "cpp";
+					pt.file = pt.file.substr(0, pt.file.length - 5);
+					path = pt.toString();
+					trace(path);
+					out = new GenWasm();
+				} else out = new GenJS();
+			};
 			default: return null;
 		}
 		if (path == null || !FileSystem.exists(path)) return null;
+		out.origPath = origPath;
 		out.path = path;
 		out.rel = rel;
 		return out;

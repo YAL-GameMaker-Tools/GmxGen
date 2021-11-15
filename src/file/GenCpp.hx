@@ -11,6 +11,17 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenCpp extends GenFile {
+	public function procCppFunc(fn:GenFunc, retType:String, args:Array<{ name:String, type:String }>) {
+		var hasDoc = fn.comp != null;
+		fn.retType = retType == "double" || retType == "void" ? GenType.Value : GenType.Pointer;
+		var sep = false;
+		for (argp in args) {
+			if (hasDoc) {
+				if (sep) fn.comp += ", "; else sep = true;
+			}
+			fn.argTypes.push(argp.type == "double" ? GenType.Value : GenType.Pointer);
+		}
+	}
 	override public function scan(code:String):Void {
 		super.scan(code);
 		
@@ -23,7 +34,7 @@ class GenCpp extends GenFile {
 		
 		// `/// doc\nDLLEXPORT double func(double arg)` -> visible
 		// `DLLEXPORT char*(some* arg)` -> hidden
-		var rxArg = ~/^\s*(double)?.+?(\w+)\s*$/g; // 1: is non-pointer, 2: name
+		var rxArg = ~/^\s*(.+?)\s*(\w+)\s*$/g; // 1: is non-pointer, 2: name
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
 				+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
@@ -42,29 +53,30 @@ class GenCpp extends GenFile {
 			var name = rx.matched(++i);
 			var argData = rx.matched(++i).trim();
 			var fn = new GenFunc(name, rx.matchedPos().pos);
-			fn.retType = retType == "double" ? GenType.Value : GenType.Pointer;
-			var comp = hasDoc ? name + "(" : null;
-			if (argData != "") {
+			if (hasDoc) fn.comp = name + "(";
+			
+			var argPairs = [];
+			if (argData.trim() != "") {
 				var argSplit = argData.split(",");
-				var sep = false;
 				for (arg in argSplit) {
 					if (rxArg.match(arg)) {
-						if (hasDoc) {
-							if (sep) comp += ", "; else sep = true;
-							comp += rxArg.matched(2);
-						}
-						fn.argTypes.push(rxArg.matched(1) != null
-							? GenType.Value : GenType.Pointer);
+						argPairs.push({
+							type: rxArg.matched(1),
+							name: rxArg.matched(2),
+						});
 					} else throw 'Can\'t match argument `$arg` in function $name';
 				}
 				fn.argCount = argSplit.length;
 			} else fn.argCount = 0;
+			
+			procCppFunc(fn, retType, argPairs);
+			
 			if (hasDoc) {
-				comp += ")";
-				if (docType != null) comp += docType;
-				if (doc != null && doc != "") comp += " : " + doc;
-				fn.comp = comp;
+				fn.comp += ")";
+				if (docType != null) fn.comp += docType;
+				if (doc != null && doc != "") fn.comp += " : " + doc;
 			}
+			
 			addFunction(fn);
 		});
 		
