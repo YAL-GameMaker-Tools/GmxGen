@@ -1,6 +1,7 @@
 package file;
 using GenTools;
 using StringTools;
+import tools.GenBuf;
 
 /**
  * ...
@@ -11,19 +12,60 @@ class GenJS extends GenFile {
 		super();
 		funcKind = 5;
 	}
+	static var rxDoc:EReg = new EReg("^"
+		+ "(?:\\w+)?" // name
+		+ "[ \t]*(?:\\(" // (...)
+			+ "([^\x29]*)" // -> argData
+			+ "\\)"
+		+ ")?"
+		+ "(->\\S+)?" // -> retType
+		+ "(.*?)" // -> desc
+		+ "(~)?" // -> hide
+	+ "", "g");
+	static var rxNosp = ~/^[-:]/g;
+	function scan_jsf(name:String, argData:String, doc:String, pos:Int) {
+		var fn = new GenFunc(name, pos);
+		
+		var docArgs:String = null, docDesc:String = null, docRet:String = null, docHide = false;
+		if (doc != null && rxDoc.match(doc)) {
+			var i = 0;
+			var docArgs = rxDoc.matched(++i);
+			docRet = rxDoc.matched(++i);
+			docDesc = rxDoc.matched(++i);
+			docHide = rxDoc.matched(++i) != null;
+		}
+		
+		if (!docHide) {
+			var cb = new GenBuf();
+			cb.addFormat("%s(%s)", name, docArgs != null ? docArgs : argData);
+			if (docRet != null) cb.addString(docRet);
+			if (docDesc != null && docDesc != "") {
+				if (!rxNosp.match(docDesc)) cb.addString(" : ");
+				cb.addString(docDesc);
+			}
+			fn.comp = cb.toString();
+		}
+		
+		argData = argData.trim();
+		if (argData != "") {
+			if (!argData.hasVarArg()) {
+				var n = argData.split(",").length;
+				fn.argCount = n;
+				for (i in 0 ... n) fn.argTypes.push(GenType.Value);
+			} else fn.argCount = -1;
+		} else fn.argCount = 0;
+		addFunction(fn);
+	}
 	override public function scan(code:String):Void {
 		super.scan(code);
-		var rxDoc:EReg = new EReg("^"
-			+ "(?:\\w+)?" // name
-			+ "[ \t]*(?:\\(([^\x29]*)\\))?" // -> argData
-			+ "(.*?)" // -> desc
-			+ "(~)?" // -> hide
-		+ "", "g");
-		var rxNosp = ~/^[-:]/g;
 		
 		var ws = "[ \t]*";
+		var docline = '\\/\\/\\/(.*)\\s*';
+		
+		// window.some = function(...) { ... }
+		// function some(...) { ... } // NB! start of line only!
 		(new EReg((""
-			+ '(?:\\/\\/\\/(.*)\\s*)?' // -> ?doc
+			+ '(?:$docline)?' // -> ?doc
 			+ '(?:window\\.(\\w+)$ws=$ws)?' // -> ?wname
 			+ 'function\\b$ws'
 			+ '(?:(\\w+)$ws)?' // -> ?fname
@@ -41,43 +83,51 @@ class GenJS extends GenFile {
 				if (prec == " ".code || prec == "\t".code) return;
 			}
 			
+			// must contain a `function name` OR a `window.name = `
 			var name = wname;
 			if (name == null) name = fname;
 			if (name == null) return;
 			
-			var fn = new GenFunc(name, rx.matchedPos().pos);
 			var argData = rx.matched(++i);
-			var comp:String = null;
-			var docDesc = null;
-			var docHide = false;
-			if (doc != null && rxDoc.match(doc)) {
-				var docComp = rxDoc.matched(0);
-				i = 0;
-				var docArgs = rxDoc.matched(++i);
-				docDesc = rxDoc.matched(++i);
-				docHide = rxDoc.matched(++i) != null;
-				if (docArgs != null) {
-					argData = docArgs;
-					if (docDesc != null) comp = name + docComp;
-				}
-			}
-			if (comp == null && !docHide) {
-				comp = name + "(" + argData + ")";
-				if (docDesc != "" && docDesc != null) {
-					if (!rxNosp.match(docDesc)) comp += " : ";
-					comp += docDesc;
-				}
-			};
-			fn.comp = comp;
-			argData = argData.trim();
-			if (argData != "") {
-				if (!argData.hasVarArg()) {
-					var n = argData.split(",").length;
-					fn.argCount = n;
-					for (i in 0 ... n) fn.argTypes.push(GenType.Value);
-				} else fn.argCount = -1;
-			} else fn.argCount = 0;
-			addFunction(fn);
+			scan_jsf(name, argData, doc, rx.matchedPos().pos);
+		});
+		
+		// window.some = (...) => ... // ES6
+		(new EReg((""
+			+ docline // -> ?doc
+			+ 'window\\.(\\w+)$ws=$ws' // -> name
+			+ '\\((.*?)\\)$ws=>' // -> argData
+		), "g")).each(code, function(rx:EReg) {
+			var i = 0;
+			var doc = rx.matched(++i);
+			var name = rx.matched(++i);
+			var argData = rx.matched(++i);
+			scan_jsf(name, argData, doc, rx.matchedPos().pos);
+		});
+		
+		var constValOpts = [
+			'".*?"',
+			"'.*?'",
+			'(\\-\\s*)?' + "(?:" + [
+				'0x[0-9a-fA-F]+',
+				'\\d+' + '(?:\\.\\d+)?', // 4, 4.2
+			].join("|") + ")",
+		].join("|");
+		var mcrDecl = '\\w+\\s*=\\s*(?:$constValOpts)';
+		var mcrMatch = new EReg('(\\w+)\\s*=\\s*($constValOpts)', 'g');
+		var mcrFull = new EReg((""
+			+ docline // -> doc
+			+ "(?:const|\\/\\*const\\*\\/\\s*var)\\s+"
+			+ "(" // -> decls
+				+ mcrDecl
+				+ '(?:\\s*,\\s*$mcrDecl)*'
+			+ ")"
+		), "g");
+		mcrFull.each(code, function(rx:EReg) {
+			mcrMatch.each(rx.matched(2), function(vrx:EReg) {
+				var m = new GenMacro(vrx.matched(1), vrx.matched(2), false, vrx.matchedPos().pos);
+				addMacro(m);
+			});
 		});
 	}
 }
