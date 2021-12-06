@@ -28,6 +28,7 @@ class GenExt2 extends GenExt {
 		json = ~/("copyToTargets":\s*)(\d{12,32})/g.replace(json, '$1"$2"');
 		//
 		yyExt = YyJsonParser.parse(json);
+		files.resize(0);
 		for (file in yyExt.files) {
 			var q:GenFile;
 			var filePath = Path.join([dir, file.filename]);
