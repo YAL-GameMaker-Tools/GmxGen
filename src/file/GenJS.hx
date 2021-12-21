@@ -94,7 +94,7 @@ class GenJS extends GenFile {
 		
 		// window.some = (...) => ... // ES6
 		(new EReg((""
-			+ docline // -> ?doc
+			+ '(?:$docline)?' // -> ?doc
 			+ 'window\\.(\\w+)$ws=$ws' // -> name
 			+ '\\((.*?)\\)$ws=>' // -> argData
 		), "g")).each(code, function(rx:EReg) {
