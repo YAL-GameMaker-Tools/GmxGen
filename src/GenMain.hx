@@ -84,7 +84,8 @@ class GenMain {
 			} else if (FileSystem.exists(path + ".yy")) {
 				path += ".yy";
 			} else {
-				Sys.println("Can't find " + path);
+				Sys.println("GmxGen: Error: Can't find " + path);
+				Sys.exit(1);
 				return;
 			}
 		}
