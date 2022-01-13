@@ -103,7 +103,13 @@ class GenFile {
 					out = new GenCs();
 				} else return null;
 			};
-			case "gml": out = new GenGml();
+			case "gml": {
+				var tp:String;
+				if (FileSystem.exists(tp = path + ".dummy")) {
+					path = tp;
+					out = new GenDummies();
+				} else out = new GenGml();
+			};
 			case "js": {
 				if (Path.withoutExtension(rel).endsWith("_wasm")) { // name_wasm.js -> name.cpp
 					var pt = new Path(path);
