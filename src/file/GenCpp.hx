@@ -22,18 +22,15 @@ class GenCpp extends GenFile {
 			fn.argTypes.push(argp.type == "double" ? GenType.Value : GenType.Pointer);
 		}
 	}
-	override public function scan(code:String):Void {
-		super.scan(code);
-		
-		//
+	function scanUnmangled(code:String):Void {
+		// `/// doc\nDLLEXPORT double func(double arg)` -> visible
+		// `DLLEXPORT char*(some* arg)` -> hidden
 		var dllExport = "dllx";
 		~/#define\s+(\w+)\s+extern\s+"C"\s+__declspec\(dllexport\)[ \t]*$/gm
 		.each(code, function(rx:EReg) {
 			dllExport = rx.matched(1);
 		});
 		
-		// `/// doc\nDLLEXPORT double func(double arg)` -> visible
-		// `DLLEXPORT char*(some* arg)` -> hidden
 		var rxArg = ~/^\s*(.+?)\s*(\w+)\s*$/g; // 1: is non-pointer, 2: name
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
@@ -79,6 +76,52 @@ class GenCpp extends GenFile {
 			
 			addFunction(fn);
 		});
+	}
+	function scanMangled(code:String):Void {
+		var dllExport2 = "dllm";
+		~/#define\s+(\w+)\s+__declspec\(dllexport\)[ \t]*$/gm
+		.each(code, function(rx:EReg) {
+			dllExport2 = rx.matched(1);
+		});
+		
+		new EReg(""
+			+ "///[ \t]*"
+			+ "(?:(\\w)[ \t]*)?" // -> name override
+			+ "\\(" + "([^\\)]*)" + "\\)" // -> argData
+			+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
+			+ "(.*)" // -> doc
+			+ '\n[ \t]*$dllExport2'
+			+ "[ \t]*void"
+			+ "[ \t]*(\\w+)" // -> name
+			+ "[ \t]*\\("
+			+ "[ \t]*\\w+[*&]" // -> type& or type*
+		+ "", "gm").each(code, function(rx:EReg) {
+			var rxi = 0;
+			var displayName = rx.matched(++rxi);
+			var argData = rx.matched(++rxi);
+			var retType = rx.matched(++rxi);
+			var docText = rx.matched(++rxi);
+			var nativeName = rx.matched(++rxi);
+			
+			var fn = new GenFunc(nativeName, rx.matchedPos().pos);
+			var comp:String;
+			if (displayName != null) {
+				fn.name = displayName;
+				comp = displayName;
+			} else comp = nativeName;
+			comp += "(" + argData + ")";
+			if (retType != null) comp += retType;
+			fn.comp = comp;
+			fn.argCount = -1;
+			
+			addFunction(fn);
+		});
+	}
+	override public function scan(code:String):Void {
+		super.scan(code);
+		
+		scanUnmangled(code);
+		scanMangled(code);
 		
 		// `///\n#define name value`
 		new EReg("///.*?(~)?\n" // -> hide
