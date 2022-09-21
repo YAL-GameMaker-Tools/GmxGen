@@ -1,5 +1,7 @@
 package file;
 import file.GenFile;
+import tools.CharCode;
+import tools.GenReader;
 using GenTools;
 using StringTools;
 
@@ -56,14 +58,8 @@ class GenGml extends file.GenFile {
 			+ "[ \t]*(.*)" // -> value
 		+ "$", "g");
 		// func_name(...args)->type : doc
-		var rxGMDoc:EReg = new EReg("^(\\w+)?" // -> display name
-			+ "[ \t]*\\(([^\x29]*)\\)" // -> argData
-			+ "(?:"
-				+ "(?:(\\-\\>.*?)(?:$|:.*?))?" // typehint (`->type`, `->type : doc`)
-				+ "|[ \t]*:.*?" // doc (` : doc`)
-			+ ")?"
-			+ "(~)?" // -> hide?
-		+ "$", "g");
+		var rsRet = "->(?:\\S*)?";
+		var rxIsGMDoc = ~/^(?:(\w+)\s*)?\((.*)/g;
 		var rxHide = ~/^@hide\b/g;
 		var rxArgo = ~/\bargument\b/g;
 		var rxArgi = [for (i in 0 ... 16) new EReg("\\bargument" + i + "\\b", "g")];
@@ -118,24 +114,91 @@ class GenGml extends file.GenFile {
 					}
 					acomp += argName;
 				}
-				else if (rxGMDoc.match(trail)) {
+				else if (rxIsGMDoc.match(trail)) {
 					foundFull = true;
-					var i = 0;
-					var comp = rxGMDoc.matched(i);
-					var dspName = rxGMDoc.matched(++i);
-					var argData = rxGMDoc.matched(++i).trim();
-					var doc = rxGMDoc.matched(++i);
-					var hide = rxGMDoc.matched(++i);
-					if (dspName == null) comp = fn.name + comp;
-					fn.comp = hide == null ? comp : null;
+					var dspName = rxIsGMDoc.matched(1);
+					if (dspName == null) dspName = fn.name;
+					var q = new GenReader(rxIsGMDoc.matched(2), "gmdoc");
+					// argData:
+					var argCount = 1;
+					var varArg = false;
+					q.skipSpaces();
+					if (q.skipIfEqu(")".code)) {
+						argCount = 0;
+					} else {
+						var wantArg = true;
+						var depth = 1;
+						var argsStart = q.pos;
+						while (q.loop) {
+							if (wantArg) {
+								wantArg = false;
+								q.skipSpaces();
+								if (q.skipIfEqu("?".code) || q.skipIfEqu("[".code)) {
+									varArg = true;
+								} else if (q.peekn(3) == "...") {
+									q.skip(3);
+									varArg = true;
+								}
+							}
+							switch (q.read()) {
+								case "(".code: depth++;
+								case ")".code: if (--depth <= 0) break;
+								case ",".code if (depth == 1): argCount += 1;
+							}
+						}
+						if (depth > 0) return;
+						if (q.substring(argsStart, q.pos - 1).indexOf("=") >= 0) varArg = true;
+					}
 					fn.argTypes.resize(0);
-					if (argData != "") {
-						if (!argData.hasVarArg()) {
-							var n = argData.split(",").length;
-							fn.argCount = n;
-							for (i in 0 ... n) fn.argTypes.push(GenType.Value);
-						} else fn.argCount = -1;
-					} else fn.argCount = 0;
+					if (varArg) {
+						fn.argCount = -1;
+					} else {
+						fn.argCount = argCount;
+						for (_ in 0 ... argCount) fn.argTypes.push(GenType.Value);
+					}
+					fn.argCount = varArg ? -1 : argCount;
+					var argData = q.substring(0, q.pos - 1);
+					
+					//
+					q.skipSpaces();
+					if (q.peekn(2) == "->") do { // once
+						q.skip(2);
+						q.skipSpaces();
+						var c:CharCode = q.peek();
+						if (c.isIdent0()) {
+							while (q.loop && q.peek().isIdent1()) q.skip();
+							q.skipSpaces();
+							c = q.peek();
+						}
+						inline function isOpen(c:CharCode) {
+							return switch (c) {
+								case "[".code, "{".code, "(".code, "<".code: true;
+								default: false;
+							}
+						}
+						var depth = 0;
+						if (isOpen(c)) { q.skip(); depth = 1; }
+						while (q.loop && depth > 0) {
+							c = q.read();
+							if (isOpen(c)) {
+								depth++;
+							} else switch (c) {
+								case "]".code, "}".code, ")".code, ">".code:
+									depth--;
+									q.skipSpaces();
+									if (isOpen(q.peek())) {
+										depth++;
+										q.skip();
+									}
+							}
+						}
+					} while (false); // ->
+					
+					//
+					var rest = q.substring(q.pos, q.len).rtrim();
+					if (rest.endsWith("~")) {
+						foundHide = true;
+					} else fn.comp = dspName + "(" + q.str;
 				}
 			}); // each
 			if (acomp != null && fn.comp == null) {

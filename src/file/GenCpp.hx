@@ -18,8 +18,8 @@ class GenCpp extends GenFile {
 		for (argp in args) {
 			if (hasDoc) {
 				if (sep) fn.comp += ", "; else sep = true;
+				fn.comp += argp.name;
 			}
-			fn.comp += argp.name;
 			fn.argTypes.push(argp.type == "double" ? GenType.Value : GenType.Pointer);
 		}
 	}
