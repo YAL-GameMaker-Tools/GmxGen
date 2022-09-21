@@ -53,6 +53,9 @@ class GenExt2 extends GenExt {
 					q.addMacro(gm);
 				}
 			}
+			q.initFunction = file.init;
+			q.finalFunction = Reflect.field(file, "final");
+			if (q.finalFunction == null) q.finalFunction = "";
 			//
 			q.data = file;
 			files.push(q);
@@ -95,7 +98,7 @@ class GenExt2 extends GenExt {
 			//
 			out.addPair("copyToTargets", d.copyToTargets);
 			out.addPair("filename", d.filename);
-			out.addPair("final", Reflect.field(d, "final"));
+			out.addPair("final", q.finalFunction);
 			//
 			out.addField("functions");
 			out.arrayOpen();
@@ -119,7 +122,7 @@ class GenExt2 extends GenExt {
 				out.objectClose();
 			}
 			out.arrayClose();
-			out.addPair("init", d.init);
+			out.addPair("init", q.initFunction);
 			out.addPair("kind", d.kind);
 			out.addPair("order", d.order);
 			out.addPair("origname", d.origname);
@@ -137,8 +140,8 @@ class GenExt2 extends GenExt {
 			var d:YyExtensionFile = q.data;
 			out.addPair("filename", d.filename);
 			out.addPair("origname", d.origname);
-			out.addPair("init", d.init);
-			out.addPair("final", Reflect.field(d, "final"));
+			out.addPair("init", q.initFunction);
+			out.addPair("final", q.finalFunction);
 			out.addPair("kind", d.kind);
 			out.addPair("uncompress", d.uncompress);
 			//

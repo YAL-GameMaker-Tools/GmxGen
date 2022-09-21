@@ -49,6 +49,8 @@ class GenExt1 extends GenExt {
 					q.addMacro(gm);
 				}
 			}
+			q.initFunction = file.findText("init");
+			q.finalFunction = file.findText("final");
 			//
 			q.data = file;
 			files.push(q);
@@ -57,6 +59,8 @@ class GenExt1 extends GenExt {
 	override public function flush():Void {
 		for (q in files) {
 			var gfile:SfGmx = q.data;
+			gfile.find("init").text = q.initFunction;
+			gfile.find("final").text = q.finalFunction;
 			//
 			var gmacros = gfile.find("constants");
 			gmacros.children.resize(0);

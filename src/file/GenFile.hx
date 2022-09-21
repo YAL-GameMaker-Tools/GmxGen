@@ -16,6 +16,8 @@ class GenFile {
 	
 	public var functionList:Array<GenFunc> = [];
 	public var functionMap:Map<String, GenFunc> = new Map();
+	public var initFunction:String = null;
+	public var finalFunction:String = null;
 	public function addFunction(f:GenFunc) {
 		var of = functionMap[f.name];
 		if (of != null) {
@@ -81,6 +83,18 @@ class GenFile {
 			var doc = rx.matched(++i);
 			var hide = rx.matched(++i) != null;
 			addMacro(new GenMacro(name, value, hide, rx.matchedPos().pos));
+		});
+		//
+		(new EReg("//#(init|final)" // -> kind
+			+ "[ \t]+(\\w+)" // -> name
+		+ "", "gm")).each(ncCode, function(rx:EReg) {
+			var i = 0;
+			var kind = rx.matched(++i);
+			var name = rx.matched(++i);
+			switch (kind) {
+				case "init": initFunction = name;
+				case "final": finalFunction = name;
+			}
 		});
 	}
 	public static function create(rel:String, path:String) {
