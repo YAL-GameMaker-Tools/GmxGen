@@ -11,8 +11,11 @@ import file.GenFile;
  */
 class GenExt1 extends GenExt {
 	public var root:SfGmx;
-	override public function proc(filter:Array<String>) {
+	public function new(path:String) {
 		GenGml.version = 1.4;
+		super(path);
+	}
+	override public function proc(filter:Array<String>) {
 		var extName = Path.withoutDirectory(Path.withoutExtension(Path.withoutExtension(path)));
 		var gmxText:String;
 		if (FileSystem.exists(path + ".base")) {
