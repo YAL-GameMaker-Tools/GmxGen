@@ -16,6 +16,15 @@ class GenGml extends file.GenFile {
 		super();
 		funcKind = 2;
 	}
+	/**
+	This changes
+	// GMS >= 2.3
+	code for newer versions
+	/*\/
+	code for older versions
+	//*\/
+	to match current target
+	**/
 	override public function patch(code:String):String {
 		var changed = false;
 		code = (new EReg("/([/*])(" // -> prefix, line without prefix
@@ -143,7 +152,9 @@ class GenGml extends file.GenFile {
 							switch (q.read()) {
 								case "(".code: depth++;
 								case ")".code: if (--depth <= 0) break;
-								case ",".code if (depth == 1): argCount += 1;
+								case ",".code if (depth == 1):
+									argCount += 1;
+									wantArg = true;
 							}
 						}
 						if (depth > 0) return;
