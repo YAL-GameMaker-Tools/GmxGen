@@ -84,25 +84,41 @@ class GenCpp extends GenFile {
 		.each(code, function(rx:EReg) {
 			dllExport2 = rx.matched(1);
 		});
+		var argMacro = "dllm_args";
+		new EReg("#define\\s+(\\w+)"
+			+ "\\s+" + "RValue" + "\\s*" + "[\\*&]" + "\\s*" + "\\w+" + "\\s*," // result
+			+ "\\s+" + "CInstance" + "\\s*" + "\\*" + "\\s*" + "\\w+" + "\\s*," // self
+			+ "\\s+" + "CInstance" + "\\s*" + "\\*" + "\\s*" + "\\w+" + "\\s*," // other
+			+ "\\s+" + "int" + "\\s+" + "\\w+" + "\\s*," // argc
+			+ "\\s+" + "RValue" + "\\s*" + "\\*" + "\\s*" + "\\w+" + "\\s*" // argv
+		+ "", "gm").each(code, function(rx:EReg) {
+			argMacro = rx.matched(1);
+		});
 		
-		new EReg(""
+		new EReg("("
 			+ "///[ \t]*"
-			+ "(?:(\\w)[ \t]*)?" // -> name override
-			+ "\\(" + "([^\\)]*)" + "\\)" // -> argData
+			+ "(?:(\\w+)[ \t]*)?" // -> name override (opt.)
+			+ "\\(" + "(.*?)" + "\\)" // -> argData
 			+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
 			+ "(.*)" // -> doc
-			+ '\n[ \t]*$dllExport2'
+			+ "\n[ \t]*)?"
+			+ dllExport2
 			+ "[ \t]*void"
 			+ "[ \t]*(\\w+)" // -> name
 			+ "[ \t]*\\("
-			+ "[ \t]*\\w+[*&]" // -> type& or type*
+			+ '[ \t]*(?:RValue\\s*[*&]|$argMacro)'
 		+ "", "gm").each(code, function(rx:EReg) {
 			var rxi = 0;
+			var hasDoc = rx.matched(++rxi) != null;
 			var displayName = rx.matched(++rxi);
 			var argData = rx.matched(++rxi);
 			var retType = rx.matched(++rxi);
 			var docText = rx.matched(++rxi);
 			var nativeName = rx.matched(++rxi);
+			if (!hasDoc) {
+				argData = "...";
+				docText = "";
+			}
 			
 			var fn = new GenFunc(nativeName, rx.matchedPos().pos);
 			var comp:String;
@@ -112,7 +128,7 @@ class GenCpp extends GenFile {
 			} else comp = nativeName;
 			comp += "(" + argData + ")";
 			if (retType != null) comp += retType;
-			fn.comp = comp;
+			fn.comp = hasDoc ? comp : null;
 			fn.argCount = -1;
 			
 			addFunction(fn);
