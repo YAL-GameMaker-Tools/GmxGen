@@ -39,7 +39,7 @@ class GenCs extends GenFile {
 			if (nameOverride != null) name = nameOverride;
 			//
 			var fn = new GenFunc(name, rx.matchedPos().pos);
-			fn.retType = retType == "double" ? GenType.Value : GenType.Pointer;
+			fn.retType = retType != "string" ? GenType.Value : GenType.Pointer;
 			var comp = hasDoc ? '$name(' : null;
 			if (argData != "") {
 				var argParts = argData.split(",");
