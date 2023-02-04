@@ -84,13 +84,14 @@ class GenFile {
 			var hide = rx.matched(++i) != null;
 			addMacro(new GenMacro(name, value, hide, rx.matchedPos().pos));
 		});
-		//
-		(new EReg("//#(init|final)" // -> kind
-			+ "[ \t]+(\\w+)" // -> name
+		// #init, #final
+		(new EReg("//#(init|final)\\b" // -> kind
+			+ "[ \t]*(?:(\\w+)|$)" // -> name
 		+ "", "gm")).each(ncCode, function(rx:EReg) {
 			var i = 0;
 			var kind = rx.matched(++i);
 			var name = rx.matched(++i);
+			if (name == null) name = "";
 			switch (kind) {
 				case "init": initFunction = name;
 				case "final": finalFunction = name;
