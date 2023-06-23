@@ -1,5 +1,6 @@
 package file;
 import ext.GenFunc;
+import ext.GenExt;
 import ext.GenMacro;
 import haxe.io.Path;
 import sys.FileSystem;
@@ -13,6 +14,7 @@ using StringTools;
  */
 class GenFile {
 	public var rel:String;
+	public var ext:GenExt;
 	public var path:String;
 	public var origPath:String;
 	
@@ -99,57 +101,5 @@ class GenFile {
 				case "final": finalFunction = name;
 			}
 		});
-	}
-	public static function create(rel:String, path:String) {
-		var out:GenFile;
-		var origPath = path;
-		switch (Path.extension(rel).toLowerCase()) {
-			case "dll", "dylib", "so": {
-				var tp:String;
-				if (FileSystem.exists(tp = Path.withExtension(path, "cpp"))) {
-					path = tp;
-					out = new GenCpp();
-				} else if (FileSystem.exists(tp = Path.withExtension(path, "h"))) {
-					path = tp;
-					out = new GenCpp();
-				} else if (FileSystem.exists(tp = Path.withExtension(path, "c"))) {
-					path = tp;
-					out = new GenCpp();
-				} else if (FileSystem.exists(tp = Path.withExtension(path, "cs"))) {
-					path = tp;
-					out = new GenCs();
-				} else return null;
-			};
-			case "gml": {
-				var tp:String;
-				if (FileSystem.exists(tp = path + ".dummy")) {
-					path = tp;
-					out = new GenDummies();
-				} else out = new GenGml();
-			};
-			case "js": {
-				if (Path.withoutExtension(rel).endsWith("_wasm")) { // name_wasm.js -> name.cpp
-					var pt = new Path(path);
-					pt.ext = "cpp";
-					pt.file = pt.file.substr(0, pt.file.length - 5);
-					path = pt.toString();
-					trace(path);
-					out = new GenWasm();
-				} else out = new GenJS();
-			};
-			default: return null;
-		}
-		if (path == null || !FileSystem.exists(path)) return null;
-		out.origPath = origPath;
-		out.path = path;
-		out.rel = rel;
-		return out;
-	}
-	public static function createIgnore(rel:String, path:String) {
-		var out = new GenFile();
-		out.ignore = true;
-		out.path = path;
-		out.rel = rel;
-		return out;
 	}
 }

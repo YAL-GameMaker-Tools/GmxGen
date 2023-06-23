@@ -1,9 +1,8 @@
 package ext;
 import ext.GenMacro;
+import ext.IGenFileSys;
 import haxe.Json;
 import haxe.io.Path;
-import sys.FileSystem;
-import sys.io.File;
 import file.*;
 import yy.YyExtension;
 import yy.YyBuf;
@@ -14,20 +13,19 @@ import yy.YyJsonParser;
  * ...
  * @author YellowAfterlife
  */
-class GenExt2 extends ext.GenExt {
+class GenExt2 extends GenExt {
 	public var json:String;
 	public var yyExt:YyExtension;
 	public var v23:Bool;
-	public function new(path:String) {
-		super(path);
-		if (FileSystem.exists(path + ".base")) {
-			json = File.getContent(path + ".base");
-		} else json = File.getContent(path);
+	public function new(fname:String, fs:IGenFileSys) {
+		super(fname, fs);
+		if (fs.exists(fname + ".base")) {
+			json = fs.getContent(fname + ".base");
+		} else json = fs.getContent(fname);
 		v23 = json.indexOf('"resourceType": "GMExtension"') >= 0;
 		GenGml.version = v23 ? 2.3 : 2.2;
 	}
 	override public function proc(filter:Array<String>) {
-		var dir = Path.directory(path);
 		// GMS2 uses non-spec int64s in extensions JSON
 		json = ~/("copyToTargets":\s*)(\d{12,32})/g.replace(json, '$1"$2"');
 		//
@@ -35,13 +33,13 @@ class GenExt2 extends ext.GenExt {
 		files.resize(0);
 		for (file in yyExt.files) {
 			var q:GenFile;
-			var filePath = Path.join([dir, file.filename]);
+			var filePath = file.filename;
 			if (filter == null || filter.indexOf(file.filename) >= 0) {
-				q = GenFile.create(file.filename, filePath);
+				q = createFile(file.filename, filePath);
 			} else q = null;
 			//
 			if (q == null) {
-				q = GenFile.createIgnore(file.filename, filePath);
+				q = createIgnoreFile(file.filename, filePath);
 				for (yf in file.functions) {
 					var gf = new GenFunc(yf.name, 0);
 					gf.argCount = yf.argCount;
@@ -53,7 +51,7 @@ class GenExt2 extends ext.GenExt {
 				for (ym in file.constants) {
 					var ymName = ym.name;
 					if (ymName == null) ymName = ym.constantName;
-					var gm = new ext.GenMacro(ymName, ym.value, ym.hidden, 0);
+					var gm = new GenMacro(ymName, ym.value, ym.hidden, 0);
 					q.addMacro(gm);
 				}
 			}
@@ -237,6 +235,6 @@ class GenExt2 extends ext.GenExt {
 		out.addString(json.substring(filesEnd));
 		json = out.toString();
 		json = ~/("copyToTargets":\s*)"([^"]+)"/g.replace(json, '$1$2');
-		File.saveContent(path, json);
+		fs.setContent(fname, json);
 	}
 }

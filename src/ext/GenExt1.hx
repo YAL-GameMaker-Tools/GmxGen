@@ -1,9 +1,8 @@
 package ext;
 import ext.GenMacro;
+import ext.IGenFileSys;
 import file.GenGml;
 import haxe.io.Path;
-import sys.FileSystem;
-import sys.io.File;
 import file.GenFile;
 import yy.SfGmx;
 
@@ -11,19 +10,21 @@ import yy.SfGmx;
  * ...
  * @author YellowAfterlife
  */
-class GenExt1 extends ext.GenExt {
+class GenExt1 extends GenExt {
 	public var root:SfGmx;
-	public function new(path:String) {
+	public function new(path:String, fs:IGenFileSys) {
+		super(path, fs);
 		GenGml.version = 1.4;
-		super(path);
 	}
 	override public function proc(filter:Array<String>) {
-		var extName = Path.withoutDirectory(Path.withoutExtension(Path.withoutExtension(path)));
+		var extName = Path.withoutExtension(Path.withoutExtension(fname));
+		
 		var gmxText:String;
-		if (FileSystem.exists(path + ".base")) {
-			gmxText = File.getContent(path + ".base");
-		} else gmxText = File.getContent(path);
-		var dir = Path.join([Path.directory(path), extName]);
+		if (fs.exists(fname + ".base")) {
+			gmxText = fs.getContent(fname + ".base");
+		} else gmxText = fs.getContent(fname);
+		
+		var dir = extName;
 		root = SfGmx.parse(gmxText);
 		for (fileRoot in root.findAll("files"))
 		for (file in fileRoot.findAll("file")) {
@@ -32,11 +33,11 @@ class GenExt1 extends ext.GenExt {
 			var filePath = Path.join([dir, rel]);
 			//
 			if (filter == null || filter.indexOf(rel) >= 0) {
-				q = GenFile.create(rel, filePath);
+				q = createFile(rel, filePath);
 			} else q = null;
 			//
 			if (q == null) {
-				q = GenFile.createIgnore(rel, filePath);
+				q = createIgnoreFile(rel, filePath);
 				for (xf in file.find("functions").findAll("function")) {
 					var gf = new ext.GenFunc(xf.findText("name"), 0);
 					gf.argCount = xf.findInt("argCount");
@@ -95,6 +96,6 @@ class GenExt1 extends ext.GenExt {
 			}
 		} // for (q in files)
 		//
-		File.saveContent(path, root.toGmxString());
+		fs.setContent(fname, root.toGmxString());
 	}
 }

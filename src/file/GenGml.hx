@@ -12,7 +12,7 @@ using StringTools;
  * ...
  * @author YellowAfterlife
  */
-class GenGml extends file.GenFile {
+class GenGml extends GenFile {
 	/** Generally 1.4, 2.2, or 2.3 */
 	public static var version:Float = 2.3;
 	public function new() {
@@ -63,7 +63,7 @@ class GenGml extends file.GenFile {
 	}
 	override public function scan(code:String) {
 		super.scan(code);
-		var rxDoc = ~/^[ \t]*\/\/\/[ \t]*(.+)$/gm;
+		var rxDoc = ~/^[ \t]*\/\/\/[ \t]*(.+)$/gm; // `/// <text>`
 		var rxRename = ~/^@rename[ \t]+(\w+)/;
 		var rxParam:EReg = new EReg("^@(?:arg|param|argument)"
 			+ "[ \t]+(\\S+)" // -> name

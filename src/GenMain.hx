@@ -2,6 +2,7 @@ package;
 import ext.GenExt;
 import ext.GenExt1;
 import ext.GenExt2;
+import ext.GenFileSys;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
@@ -17,9 +18,18 @@ class GenMain {
 	public static var extension:GenExt;
 	public static var helperPrefix:String = null;
 	public static function procStart(path:String) {
-		extension = switch (Path.extension(path).toLowerCase()) {
-			case "yy": v2 = true; new GenExt2(path);
-			default: v2 = false; new GenExt1(path);
+		var pt = new Path(path);
+		var ext = pt.ext?.toLowerCase();
+		var dir = pt.dir ?? "";
+		var fs = new GenFileSys(Path.directory(path));
+		var fname = Path.withoutDirectory(path);
+		switch (Path.extension(path).toLowerCase()) {
+			case "yy":
+				v2 = true;
+				extension = new GenExt2(path, fs);
+			default:
+				v2 = false;
+				extension = new GenExt1(path, fs);
 		};
 	}
 	public static function proc(filter:Array<String>, path:String) {
@@ -128,7 +138,7 @@ class GenMain {
 		try {
 			mainImpl(Sys.args());
 		} catch (x:Dynamic) {
-			Sys.println(Path.withoutDirectory(extension.path) + ": error 1: " + x);
+			Sys.println(extension.fname + ": error 1: " + x);
 			Sys.exit(1);
 		}
 	}
