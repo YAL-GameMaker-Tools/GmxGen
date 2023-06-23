@@ -1,4 +1,6 @@
 package file;
+import ext.GenFunc;
+import ext.GenType;
 import haxe.io.Path;
 import sys.io.File;
 using tools.GenTools;

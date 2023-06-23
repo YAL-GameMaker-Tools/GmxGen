@@ -1,15 +1,17 @@
-package;
+package ext;
+import ext.GenMacro;
 import file.GenGml;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 import file.GenFile;
+import yy.SfGmx;
 
 /**
  * ...
  * @author YellowAfterlife
  */
-class GenExt1 extends GenExt {
+class GenExt1 extends ext.GenExt {
 	public var root:SfGmx;
 	public function new(path:String) {
 		GenGml.version = 1.4;
@@ -36,7 +38,7 @@ class GenExt1 extends GenExt {
 			if (q == null) {
 				q = GenFile.createIgnore(rel, filePath);
 				for (xf in file.find("functions").findAll("function")) {
-					var gf = new GenFunc(xf.findText("name"), 0);
+					var gf = new ext.GenFunc(xf.findText("name"), 0);
 					gf.argCount = xf.findInt("argCount");
 					for (xa in xf.find("args").findAll("arg")) {
 						gf.argTypes.push(xa.textAsInt);
@@ -47,7 +49,7 @@ class GenExt1 extends GenExt {
 					q.addFunction(gf);
 				}
 				for (xm in file.find("constants").findAll("constant")) {
-					var gm = new GenMacro(xm.findText("name"), xm.findText("value"),
+					var gm = new ext.GenMacro(xm.findText("name"), xm.findText("value"),
 						xm.findInt("hidden") != 0, 0);
 					q.addMacro(gm);
 				}

@@ -1,4 +1,7 @@
 package file;
+import ext.GenFunc;
+import ext.GenMacro;
+import ext.GenType;
 import file.GenCppAutoStruct;
 import file.GenCppStructOffsets;
 import haxe.io.Path;

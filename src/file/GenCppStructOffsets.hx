@@ -1,4 +1,5 @@
 package file;
+import ext.GenMacro;
 using tools.GenTools;
 using StringTools;
 

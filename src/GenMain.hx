@@ -1,7 +1,11 @@
 package;
+import ext.GenExt;
+import ext.GenExt1;
+import ext.GenExt2;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.GenCopy;
 
 /**
  * ...

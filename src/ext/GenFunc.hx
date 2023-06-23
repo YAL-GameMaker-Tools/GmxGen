@@ -1,4 +1,4 @@
-package;
+package ext;
 
 /**
  * ...
@@ -15,9 +15,9 @@ class GenFunc {
 	/** The only time it differs from argTypes.length is when it's -1 for vararg */
 	public var argCount:Int = -1;
 	
-	public var argTypes:Array<GenType> = [];
+	public var argTypes:Array<ext.GenType> = [];
 	
-	public var retType:GenType = GenType.Value;
+	public var retType:ext.GenType = ext.GenType.Value;
 	
 	public var funcKind:Int;
 	

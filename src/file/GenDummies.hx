@@ -1,4 +1,5 @@
 package file;
+import ext.GenFunc;
 import file.GenFile;
 using tools.GenTools;
 
@@ -15,7 +16,7 @@ class GenDummies extends GenFile {
 		~/^((\w+).+)/gm.each(code, function(rx:EReg) {
 			var help = rx.matched(1);
 			var name = rx.matched(2);
-			var fn = new GenFunc(name, rx.matchedPos().pos);
+			var fn = new ext.GenFunc(name, rx.matchedPos().pos);
 			fn.argCount = -1;
 			fn.comp = help;
 			addFunction(fn);

@@ -1,4 +1,7 @@
 package file;
+import ext.GenFunc;
+import ext.GenMacro;
+import ext.GenType;
 import file.GenFile;
 import tools.CharCode;
 import tools.GenReader;

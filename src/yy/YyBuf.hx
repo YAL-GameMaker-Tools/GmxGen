@@ -1,4 +1,4 @@
-package;
+package yy;
 import haxe.DynamicAccess;
 import haxe.Json;
 

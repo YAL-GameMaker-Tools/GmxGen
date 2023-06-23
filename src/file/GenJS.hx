@@ -1,6 +1,9 @@
 package file;
 using tools.GenTools;
 using StringTools;
+import ext.GenFunc;
+import ext.GenMacro;
+import ext.GenType;
 import tools.GenBuf;
 
 /**

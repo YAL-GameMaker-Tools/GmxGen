@@ -1,16 +1,20 @@
-package;
+package ext;
+import ext.GenMacro;
 import haxe.Json;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 import file.*;
-import YyExtension;
+import yy.YyExtension;
+import yy.YyBuf;
+import yy.YyGUID;
+import yy.YyJsonParser;
 
 /**
  * ...
  * @author YellowAfterlife
  */
-class GenExt2 extends GenExt {
+class GenExt2 extends ext.GenExt {
 	public var json:String;
 	public var yyExt:YyExtension;
 	public var v23:Bool;
@@ -49,7 +53,7 @@ class GenExt2 extends GenExt {
 				for (ym in file.constants) {
 					var ymName = ym.name;
 					if (ymName == null) ymName = ym.constantName;
-					var gm = new GenMacro(ymName, ym.value, ym.hidden, 0);
+					var gm = new ext.GenMacro(ymName, ym.value, ym.hidden, 0);
 					q.addMacro(gm);
 				}
 			}
