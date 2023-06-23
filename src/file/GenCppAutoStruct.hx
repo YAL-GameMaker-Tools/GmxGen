@@ -1,5 +1,5 @@
 package file;
-using GenTools;
+using tools.GenTools;
 
 /**
  * If a .cpp file has a `/// @autostruct <file name>` comment in it,

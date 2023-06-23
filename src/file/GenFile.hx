@@ -2,7 +2,7 @@ package file;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-using GenTools;
+using tools.GenTools;
 using StringTools;
 
 /**

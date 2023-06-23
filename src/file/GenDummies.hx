@@ -1,6 +1,6 @@
 package file;
 import file.GenFile;
-using GenTools;
+using tools.GenTools;
 
 /**
  * ...

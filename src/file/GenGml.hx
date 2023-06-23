@@ -2,7 +2,7 @@ package file;
 import file.GenFile;
 import tools.CharCode;
 import tools.GenReader;
-using GenTools;
+using tools.GenTools;
 using StringTools;
 
 /**

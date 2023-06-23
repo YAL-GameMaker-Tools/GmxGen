@@ -3,7 +3,7 @@ import file.GenCppAutoStruct;
 import file.GenCppStructOffsets;
 import haxe.io.Path;
 import sys.io.File;
-using GenTools;
+using tools.GenTools;
 using StringTools;
 
 /**

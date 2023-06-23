@@ -1,5 +1,5 @@
 package file;
-using GenTools;
+using tools.GenTools;
 using StringTools;
 
 /**
