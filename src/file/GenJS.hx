@@ -15,32 +15,31 @@ class GenJS extends GenFile {
 		super();
 		funcKind = 5;
 	}
-	static var rxDoc:EReg = new EReg("^"
-		+ "(?:\\w+)?" // name
-		+ "[ \t]*(?:\\(" // (...)
-			+ "([^\x29]*)" // -> argData
-			+ "\\)"
-		+ ")?"
+	static var rxDoc:EReg = new EReg("^[ \t]*"
+		+ "(?:(\\w+)[ \t]*)?" // -> name
+		+ "(?:" + "\\(" + "(.*?)" + "\\)" + ")?" // -> argData
 		+ "(->\\S+)?" // -> retType
 		+ "(.*?)" // -> desc
 		+ "(~)?" // -> hide
-	+ "", "g");
+	+ "", "");
 	static var rxNosp = ~/^[-:]/g;
 	function scan_jsf(name:String, argData:String, doc:String, pos:Int) {
 		var fn = new GenFunc(name, pos);
-		
 		var docArgs:String = null, docDesc:String = null, docRet:String = null, docHide = false;
 		if (doc != null && rxDoc.match(doc)) {
 			var i = 0;
-			var docArgs = rxDoc.matched(++i);
+			var alias = rxDoc.matched(++i);
+			docArgs = rxDoc.matched(++i);
+			if (docArgs != null) docArgs = docArgs.trim();
 			docRet = rxDoc.matched(++i);
 			docDesc = rxDoc.matched(++i);
 			docHide = rxDoc.matched(++i) != null;
+			if (alias != null) fn.name = alias;
 		}
 		
 		if (!docHide) {
 			var cb = new GenBuf();
-			cb.addFormat("%s(%s)", name, docArgs != null ? docArgs : argData);
+			cb.addFormat("%s(%s)", fn.name, docArgs != null ? docArgs : argData);
 			if (docRet != null) cb.addString(docRet);
 			if (docDesc != null && docDesc != "") {
 				if (!rxNosp.match(docDesc)) cb.addString(" : ");
@@ -49,6 +48,7 @@ class GenJS extends GenFile {
 			fn.comp = cb.toString();
 		}
 		
+		if (docArgs != null && docArgs != "") argData = docArgs;
 		argData = argData.trim();
 		if (argData != "") {
 			if (!argData.hasVarArg()) {
