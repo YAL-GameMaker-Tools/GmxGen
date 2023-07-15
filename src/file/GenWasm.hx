@@ -12,20 +12,20 @@ using StringTools;
 class GenWasm extends GenCpp {
 	var wrap:GenBuf;
 	override public function scan(code:String):Void {
-		var pfx = GenMain.helperPrefix;
+		var pfx = GenOpt.helperPrefix;
 		if (pfx == null) throw "Should set --helper-prefix <name> for WASM";
 		wrap = new GenBuf();
 		wrap.addFormat('function %(s)_wasm_autowrap() %{', pfx);
 		super.scan(code);
 		wrap.addFormat('%-}');
-		File.saveContent(Path.withoutExtension(origPath) + "_autogen.js", wrap.toString());
+		ext.fs.setContent(Path.withoutExtension(relPath) + "_autogen.js", wrap.toString());
 	}
 	static var rxIsString:EReg = ~/^\s*(const\s+)?char\s*\*/;
 	static var rxInOut:EReg = ~/^_*([iI]n_*)?([oO]ut)?[_A-Z]/i;
 	override public function procCppFunc(fn:GenFunc, retType:String, args:Array<{name:String, type:String}>):Void {
 		super.procCppFunc(fn, retType, args);
 		var fnName = "_" + fn.extName; fn.extName = fnName;
-		var pfx = GenMain.helperPrefix;
+		var pfx = GenOpt.helperPrefix;
 		
 		var wantFunc = false;
 		var pre = new GenBuf(); pre.indent = wrap.indent + 2;

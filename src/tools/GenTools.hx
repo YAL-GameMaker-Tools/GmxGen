@@ -1,4 +1,5 @@
 package tools;
+import sys.FileSystem;
 
 /**
  * ...
@@ -23,5 +24,13 @@ class GenTools {
 		s = rxCommentLine.replace(s, "");
 		s = rxCommentBlock.replace(s, "");
 		return s;
+	}
+	
+	public static function mtimeOf(path:String):Float {
+		try {
+			return FileSystem.stat(path).mtime.getTime();
+		} catch (x:Dynamic) {
+			return 0;
+		}
 	}
 }

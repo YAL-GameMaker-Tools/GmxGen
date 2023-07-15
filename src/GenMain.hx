@@ -3,10 +3,12 @@ import ext.GenExt;
 import ext.GenExt1;
 import ext.GenExt2;
 import ext.GenFileSys;
+import haxe.CallStack;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 import tools.GenCopy;
+import tools.GenTools;
 
 /**
  * ...
@@ -16,20 +18,19 @@ class GenMain {
 	public static var v2:Bool = false;
 	public static var remaps:Array<GenRemap> = [];
 	public static var extension:GenExt;
-	public static var helperPrefix:String = null;
 	public static function procStart(path:String) {
 		var pt = new Path(path);
 		var ext = pt.ext?.toLowerCase();
 		var dir = pt.dir ?? "";
-		var fs = new GenFileSys(Path.directory(path));
+		var fs = new GenFileSys(dir);
 		var fname = Path.withoutDirectory(path);
 		switch (Path.extension(path).toLowerCase()) {
 			case "yy":
 				v2 = true;
-				extension = new GenExt2(path, fs);
+				extension = new GenExt2(fname, fs);
 			default:
 				v2 = false;
-				extension = new GenExt1(path, fs);
+				extension = new GenExt1(fname, fs);
 		};
 	}
 	public static function proc(filter:Array<String>, path:String) {
@@ -38,8 +39,10 @@ class GenMain {
 		var paths = [path];
 		var rms:Array<GenRemap> = remaps;
 		for (file in ext.files) {
+			paths.push((cast ext.fs:GenFileSys).dir + "/" + file.relPath);
+			if (file.ignore) continue;
+			Sys.println('Checking "${file.fname}"...');
 			file.proc();
-			paths.push(file.path);
 			for (rm in rms) {
 				var rx = rm.rx, rs = rm.rs;
 				for (func in file.functionList) {
@@ -52,13 +55,6 @@ class GenMain {
 		}
 		ext.flush();
 		return paths;
-	}
-	public static function mtimeOf(path:String):Float {
-		try {
-			return FileSystem.stat(path).mtime.getTime();
-		} catch (x:Dynamic) {
-			return 0;
-		}
 	}
 	public static function mainImpl(args:Array<String>) {
 		var watch = args.remove("--watch");
@@ -75,7 +71,7 @@ class GenMain {
 			var del = switch (args[i]) {
 				case "--remap": procRemap(remaps, args[i + 1], args[i + 2]); 3;
 				case "--copy": GenCopy.add(args[i + 1], args[i + 2]); 3;
-				case "--helper-prefix": helperPrefix = args[i + 1]; 2;
+				case "--helper-prefix": GenOpt.helperPrefix = args[i + 1]; 2;
 				default: 0;
 			}
 			if (del > 0) {
@@ -113,14 +109,14 @@ class GenMain {
 		GenCopy.ready(dir);
 		//
 		var paths = proc(args, path);
-		var mtime = mtimeOf(path);
+		var mtime = GenTools.mtimeOf(path);
 		if (watch) Sys.println("Watching for changes...");
 		if (watch) while (true) {
 			Sys.sleep(1);
 			try {
 				var upd = false;
 				for (path in paths) {
-					if (mtimeOf(path) > mtime) {
+					if (GenTools.mtimeOf(path) > mtime) {
 						upd = true; break;
 					}
 				}
@@ -128,7 +124,7 @@ class GenMain {
 				if (!upd) continue;
 				Sys.println("[" + Date.now().toString() + "] Update");
 				paths = proc(args, path);
-				mtime = mtimeOf(path);
+				mtime = GenTools.mtimeOf(path);
 			} catch (x:Dynamic) {
 				Sys.println(x);
 			}
@@ -138,7 +134,8 @@ class GenMain {
 		try {
 			mainImpl(Sys.args());
 		} catch (x:Dynamic) {
-			Sys.println(extension.fname + ": error 1: " + x);
+			Sys.println(extension?.fname + ": error 1: " + x
+				+ CallStack.toString(CallStack.exceptionStack(true)));
 			Sys.exit(1);
 		}
 	}

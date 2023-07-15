@@ -28,10 +28,10 @@ class GenExt {
 		//
 	}
 	
-	public function createFile(rel:String, path:String) {
+	public function createFile(fname:String, path:String) {
 		var out:GenFile;
 		var origPath = path;
-		switch (Path.extension(rel).toLowerCase()) {
+		switch (Path.extension(fname).toLowerCase()) {
 			case "dll", "dylib", "so": {
 				var tp:String;
 				if (fs.exists(tp = Path.withExtension(path, "cpp"))) {
@@ -56,7 +56,7 @@ class GenExt {
 				} else out = new GenGml();
 			};
 			case "js": {
-				if (Path.withoutExtension(rel).endsWith("_wasm")) {
+				if (Path.withoutExtension(fname).endsWith("_wasm")) {
 					// myext_wasm.js -> myext.cpp
 					var pt = new Path(path);
 					pt.ext = "cpp";
@@ -68,15 +68,17 @@ class GenExt {
 			default: return null;
 		}
 		if (path == null || !fs.exists(path)) return null;
-		out.origPath = origPath;
-		out.rel = rel;
+		out.fname = fname;
+		out.relPath = path;
+		out.ext = this;
 		return out;
 	}
-	public function createIgnoreFile(rel:String, path:String) {
+	public function createIgnoreFile(fname:String, path:String) {
 		var out = new GenFile();
 		out.ignore = true;
-		out.path = path;
-		out.rel = rel;
+		out.fname = fname;
+		out.relPath = path;
+		out.ext = this;
 		return out;
 	}
 }

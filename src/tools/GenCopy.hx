@@ -2,6 +2,7 @@ package tools ;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.GenTools;
 
 /**
  * ...
@@ -51,7 +52,7 @@ class GenCopy {
 	static var mtimes:Map<String, Float> = new Map();
 	static function check(from:String, nonX86:Bool) {
 		var t0 = mtimes[from];
-		var t1 = GenMain.mtimeOf(from);
+		var t1 = GenTools.mtimeOf(from);
 		if (t0 == null || t0 < t1) {
 			mtimes[from] = t1;
 			// avoid copying x64 DLLs to pre-2.3 projects:

@@ -3,8 +3,6 @@ import ext.GenFunc;
 import ext.GenExt;
 import ext.GenMacro;
 import haxe.io.Path;
-import sys.FileSystem;
-import sys.io.File;
 using tools.GenTools;
 using StringTools;
 
@@ -13,10 +11,11 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenFile {
-	public var rel:String;
+	/** "some.gml" */
+	public var fname:String;
+	/** relative to extension folder, so "extname/some.gml" in GMS1 */
+	public var relPath:String;
 	public var ext:GenExt;
-	public var path:String;
-	public var origPath:String;
 	
 	public var functionList:Array<GenFunc> = [];
 	public var functionMap:Map<String, GenFunc> = new Map();
@@ -52,14 +51,17 @@ class GenFile {
 	public function new() {
 		
 	}
+	@:keep public function toString() {
+		return Type.getClassName(Type.getClass(this)) + '(rel:"$relPath")';
+	}
+	
 	public function proc():Void {
 		if (ignore) return;
-		Sys.println('Checking `$rel`...');
-		var code:String = File.getContent(path);
+		var code:String = ext.fs.getContent(relPath);
 		var pcode = patch(code);
 		if (pcode != null) {
 			code = pcode;
-			File.saveContent(path, pcode);
+			ext.fs.setContent(relPath, pcode);
 		}
 		code = ~/\r\n/g.replace(code, "\n");
 		//
@@ -73,7 +75,7 @@ class GenFile {
 	}
 	public function scan(code:String):Void {
 		// don't process macros inside multi-line comments
-		var ncCode = ~/\/\*.+?\*\//g.replace(code, "");
+		var ncCode = ~/\/\*[\s\S]+?\*\//g.replace(code, "");
 		(new EReg("//(#macro)" // -> kind
 			+ "[ \t]+(\\w+)" // -> name
 			+ "[ \t]+(.+?)" // -> value

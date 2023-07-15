@@ -5,7 +5,6 @@ import ext.GenType;
 import file.GenCppAutoStruct;
 import file.GenCppStructOffsets;
 import haxe.io.Path;
-import sys.io.File;
 using tools.GenTools;
 using StringTools;
 
@@ -195,12 +194,11 @@ class GenCpp extends GenFile {
 		~/\/\/\/[ \t]*@autostruct\b[ \t]*(.+)/.each(code, function(rx:EReg) {
 			autoStructs = true;
 			var rel = rx.matched(1);
-			var asp = Path.directory(path) + "/" + rel;
-			var gml0 = File.getContent(asp);
+			var gml0 = ext.fs.getContent(rel);
 			var gml1 = GenCppAutoStruct.proc(code, gml0);
 			if (gml0 != gml1) {
 				Sys.println('Updated $rel with structs');
-				File.saveContent(asp, gml1);
+				ext.fs.setContent(rel, gml1);
 			}
 		});
 		if (!autoStructs) GenCppStructOffsets.scanStructOffsets(this, code);
