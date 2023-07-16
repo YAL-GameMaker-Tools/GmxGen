@@ -8,12 +8,12 @@ So, instead of tinkering with the little pop-up menus for defining functions and
 
 Neko VM (note: if you didn't install it together with Haxe, get it from [the website](https://nekovm.org/)):
 ```
-haxe -cp src -neko GmxGen.n -main GenMain
+haxe build-neko.hxml
 nekotools boot bin/GmxGen.n
 ```
 For C# (note: do `haxelib install hxcs` first if you've never used Haxe➜C# before):
 ```bat
-haxe -cp src -cs GmxGen.NET -main GenMain
+haxe build-cs.hxml
 copy /Y GmxGen.NET\bin\GenMain.exe bin\GmxGen.exe
 ```
 _Or_: Open the included HXPROJ using a [development version](https://flashdevelop.org/downloads/builds/) of HaxeDevelop and press Build Project (F8)
