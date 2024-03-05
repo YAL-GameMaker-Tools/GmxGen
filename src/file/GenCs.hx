@@ -24,7 +24,7 @@ class GenCs extends GenFile {
 			+ "\\[DllExport(?:\\("
 				+ '$sp*"(\\w+)"' + '.*?' // -> name override
 			+ "\\))?\\]\\s*"
-			+ "(?:(?:public|private|protected|internal|static)\\s+)*"
+			+ "(?:(?:public|private|protected|internal|static|unsafe)\\s+)*"
 			+ '(void|double|string)\\s+' // -> return type
 			+ '(\\w+)\\s*' // -> name
 			+ '\\(' + '(.*?)' + '\\)' // -> arguments
