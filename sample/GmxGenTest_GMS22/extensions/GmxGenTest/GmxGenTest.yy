@@ -287,13 +287,50 @@
                 
             ],
             "constants": [
-                
+                {
+                    "id": "e1f1ecaa-d5db-0ee3-bd97-70c4f3ca22fc",
+                    "modelName": "GMExtensionConstant",
+                    "mvc": "1.0",
+                    "constantName": "ggt_gml_zero",
+                    "hidden": false,
+                    "value": "0"
+                }
             ],
             "copyToTargets": 9223372036854775807,
             "filename": "GmxGenTest.gml",
             "final": "",
             "functions": [
-                
+                {
+                    "id": "40cba871-3d30-da96-3901-e562bf0a39b5",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": 0,
+                    "args": [
+                        
+                    ],
+                    "externalName": "ggt_gml_hidden",
+                    "help": "",
+                    "hidden": true,
+                    "kind": 11,
+                    "name": "ggt_gml_hidden",
+                    "returnType": 2
+                },
+                {
+                    "id": "f1694392-1080-e698-7c89-971f41d04cf6",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": 2,
+                    "args": [
+                        2,
+                        2
+                    ],
+                    "externalName": "ggt_gml_add",
+                    "help": "ggt_gml_add(a, b)",
+                    "hidden": false,
+                    "kind": 2,
+                    "name": "ggt_gml_add",
+                    "returnType": 2
+                }
             ],
             "init": "",
             "kind": 2,
@@ -317,7 +354,69 @@
             "filename": "GmxGenTest.js",
             "final": "",
             "functions": [
-                
+                {
+                    "id": "2f9c05af-1e24-7abc-b667-64e4f2b5d1c6",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": 2,
+                    "args": [
+                        2,
+                        2
+                    ],
+                    "externalName": "ggt_js_add",
+                    "help": "ggt_js_add(a, b)",
+                    "hidden": false,
+                    "kind": 5,
+                    "name": "ggt_js_add",
+                    "returnType": 2
+                },
+                {
+                    "id": "bd5f7655-afef-678a-fd18-ebaa86a92e82",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": 2,
+                    "args": [
+                        2,
+                        2
+                    ],
+                    "externalName": "ggt_js_add_2",
+                    "help": "ggt_js_add_2(a, b)",
+                    "hidden": false,
+                    "kind": 5,
+                    "name": "ggt_js_add_2",
+                    "returnType": 2
+                },
+                {
+                    "id": "93a355f7-4904-4df2-8177-d490a47e04c4",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": 2,
+                    "args": [
+                        2,
+                        2
+                    ],
+                    "externalName": "ggt_js_hidden_add",
+                    "help": "",
+                    "hidden": true,
+                    "kind": 11,
+                    "name": "ggt_js_hidden_add",
+                    "returnType": 2
+                },
+                {
+                    "id": "ca95f31f-105f-16f1-08b2-8dadd88f6cda",
+                    "modelName": "GMExtensionFunction",
+                    "mvc": "1.0",
+                    "argCount": -1,
+                    "args": [
+                        
+                    ],
+                    "externalName": "ggt_js_add_many",
+                    "help": "ggt_js_add_many(value, ...values)",
+                    "hidden": false,
+                    "kind": 5,
+                    "name": "ggt_js_add_many",
+                    "returnType": 2
+                }
             ],
             "init": "",
             "kind": 5,

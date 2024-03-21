@@ -1,13 +1,11 @@
-/*#define GmxGenTest_prepare_buffer
-/// (size:int)->buffer~
-#args _size
-gml_pragma("global", "global.__GmxGenTest_buffer = undefined");
-var _buf = global.__GmxGenTest_buffer;
-if (_buf == undefined) {
-    _buf = buffer_create(_size, buffer_grow, 1);
-    global.__GmxGenTest_buffer = _buf;
-} else if (buffer_get_size(_buf) < _size) {
-    buffer_resize(_buf, _size);
-}
-buffer_seek(_buf, buffer_seek_start, 0);
-return _buf;*/
+#define ggt_gml_hidden
+// GML functions are hidden unless they have a comment inside them
+exit;
+
+#define ggt_gml_add
+/// (a, b)
+// ^ like this
+return argument0 + argument1;
+
+// doing #macro inside an extension doesn't work so you can do this:
+//#macro ggt_gml_zero 0

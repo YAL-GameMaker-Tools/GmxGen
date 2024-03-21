@@ -228,8 +228,36 @@
         </Config>
       </ConfigOptions>
       <ProxyFiles/>
-      <functions/>
-      <constants/>
+      <functions>
+        <function>
+          <name>ggt_gml_hidden</name>
+          <externalName>ggt_gml_hidden</externalName>
+          <kind>11</kind>
+          <help></help>
+          <returnType>2</returnType>
+          <argCount>0</argCount>
+          <args/>
+        </function>
+        <function>
+          <name>ggt_gml_add</name>
+          <externalName>ggt_gml_add</externalName>
+          <kind>2</kind>
+          <help>ggt_gml_add(a, b)</help>
+          <returnType>2</returnType>
+          <argCount>2</argCount>
+          <args>
+            <arg>2</arg>
+            <arg>2</arg>
+          </args>
+        </function>
+      </functions>
+      <constants>
+        <constant>
+          <name>ggt_gml_zero</name>
+          <value>0</value>
+          <hidden>0</hidden>
+        </constant>
+      </constants>
     </file>
     <file>
       <filename>GmxGenTest.js</filename>
@@ -244,7 +272,53 @@
         </Config>
       </ConfigOptions>
       <ProxyFiles/>
-      <functions/>
+      <functions>
+        <function>
+          <name>ggt_js_add</name>
+          <externalName>ggt_js_add</externalName>
+          <kind>5</kind>
+          <help>ggt_js_add(a, b)</help>
+          <returnType>2</returnType>
+          <argCount>2</argCount>
+          <args>
+            <arg>2</arg>
+            <arg>2</arg>
+          </args>
+        </function>
+        <function>
+          <name>ggt_js_add_2</name>
+          <externalName>ggt_js_add_2</externalName>
+          <kind>5</kind>
+          <help>ggt_js_add_2(a, b)</help>
+          <returnType>2</returnType>
+          <argCount>2</argCount>
+          <args>
+            <arg>2</arg>
+            <arg>2</arg>
+          </args>
+        </function>
+        <function>
+          <name>ggt_js_hidden_add</name>
+          <externalName>ggt_js_hidden_add</externalName>
+          <kind>11</kind>
+          <help></help>
+          <returnType>2</returnType>
+          <argCount>2</argCount>
+          <args>
+            <arg>2</arg>
+            <arg>2</arg>
+          </args>
+        </function>
+        <function>
+          <name>ggt_js_add_many</name>
+          <externalName>ggt_js_add_many</externalName>
+          <kind>5</kind>
+          <help>ggt_js_add_many(value, ...values)</help>
+          <returnType>2</returnType>
+          <argCount>-1</argCount>
+          <args/>
+        </function>
+      </functions>
       <constants/>
     </file>
   </files>

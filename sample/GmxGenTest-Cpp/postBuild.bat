@@ -1,4 +1,5 @@
 @echo off
+rem goto bye
 set dllPath=%~1
 set solutionDir=%~2
 set projectDir=%~3
@@ -31,28 +32,24 @@ set cppPath=%extMain%\%cppRel%
 set gmlPath=%extMain%\*.gml
 set jsPath=%extMain%\*.js
 
-where /q gmxgen
-if %ERRORLEVEL% EQU 0 (
+echo Combining the source files...
+type "%projectDir%*.h" "%projectDir%*.cpp" >"%cppPath%" 2>nul
 	
-	echo Combining the source files...
-	type "%projectDir%*.h" "%projectDir%*.cpp" >"%cppPath%" 2>nul
-	
-	echo Running GmxGen...
-	
-	gmxgen "%extMain%\%extName%.yy" ^
-	--copy "%dllPath%" "%dllRel%:%arch%"
+echo Running GmxGen...
+set gmxgen=%solutionDir%\..\bin\GmxGen.n
 
-	set copyRest=--copy "%dllPath%" "%dllRel%:%arch%" ^
-	--copy "%cppPath%" "%cppRel%" ^
-	--copy "%jsPath%" "*.js" ^
-	--copy "%gmlPath%" "*.gml"
+neko %gmxgen% "%extMain%\%extName%.yy" ^
+--copy "%dllPath%" "%dllRel%:%arch%"
 
-	gmxgen "%ext2023%\%extName%.yy" %copyRest%
-	gmxgen "%ext2022%\%extName%.yy" %copyRest%
-	gmxgen "%ext23%\%extName%.yy" %copyRest%
-	gmxgen "%ext22%\%extName%.yy" %copyRest%
-	gmxgen "%ext14%.extension.gmx" %copyRest%
+set copyRest=--copy "%dllPath%" "%dllRel%:%arch%" ^
+--copy "%cppPath%" "%cppRel%" ^
+--copy "%jsPath%" "*.js" ^
+--copy "%gmlPath%" "*.gml"
 
-) else (
-	echo postBuild.bat: Error N/A: Could not find GmxGen - extensions will not be updated automatically. See https://github.com/YAL-GameMaker-Tools/GmxGen for setup.
-)
+neko %gmxgen% "%ext2023%\%extName%.yy" %copyRest%
+neko %gmxgen% "%ext2022%\%extName%.yy" %copyRest%
+neko %gmxgen% "%ext23%\%extName%.yy" %copyRest%
+neko %gmxgen% "%ext22%\%extName%.yy" %copyRest%
+neko %gmxgen% "%ext14%.extension.gmx" %copyRest%
+exit 0
+:bye
