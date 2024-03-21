@@ -17,12 +17,14 @@ import tools.GenTools;
 class GenMain {
 	public static var v2:Bool = false;
 	public static var remaps:Array<GenRemap> = [];
+	public static var dryRun = false;
 	public static var extension:GenExt;
 	public static function procStart(path:String) {
 		var pt = new Path(path);
 		var ext = pt.ext?.toLowerCase();
 		var dir = pt.dir ?? "";
 		var fs = new GenFileSys(dir);
+		fs.dryRun = dryRun;
 		var fname = Path.withoutDirectory(path);
 		switch (Path.extension(path).toLowerCase()) {
 			case "yy":
@@ -72,6 +74,7 @@ class GenMain {
 				case "--remap": procRemap(remaps, args[i + 1], args[i + 2]); 3;
 				case "--copy": GenCopy.add(args[i + 1], args[i + 2]); 3;
 				case "--helper-prefix": GenOpt.helperPrefix = args[i + 1]; 2;
+				case "--dry": dryRun = true; 1;
 				default: 0;
 			}
 			if (del > 0) {

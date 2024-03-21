@@ -8,6 +8,7 @@ import sys.io.File;
  */
 class GenFileSys implements IGenFileSys {
 	public var dir:String;
+	public var dryRun:Bool;
 	public function new(dir:String) {
 		this.dir = dir;
 	}
@@ -21,6 +22,7 @@ class GenFileSys implements IGenFileSys {
 	}
 	
 	public function setContent(rel:String, text:String):Void {
+		if (dryRun) rel += ".new";
 		File.saveContent(dir + "/" + rel, text);
 	}
 	
