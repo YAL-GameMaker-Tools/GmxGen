@@ -21,6 +21,11 @@ class GenFunc {
 	
 	public var funcKind:Int;
 	
+	public var isHidden(get, never):Bool;
+	inline function get_isHidden() {
+		return comp == null;
+	}
+	
 	public function new(name:String, pos:Int) {
 		this.name = name;
 		this.extName = name;

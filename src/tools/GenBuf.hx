@@ -24,17 +24,27 @@ class GenBuf extends StringBuf {
 		inline function arg(fn:CppBufFormatFunc) {
 			return new CppBufFormatMeta(fn, false);
 		}
+		//
+		function arg_s(b:GenBuf, val:Any, i:Int) b.addString(val);
+		function arg_b(b:GenBuf, val:Any, i:Int) b.addBuffer(val);
+		function arg_d(b:GenBuf, val:Any, i:Int) b.addInt(val);
+		//
+		function sim_line(b:GenBuf, val:Any, i:Int) b.addLine(0);
+		function sim_inc(b:GenBuf, val:Any, i:Int) b.addLine(1);
+		function sim_dec(b:GenBuf, val:Any, i:Int) b.addLine(1);
+		function sim_open(b:GenBuf, val:Any, i:Int) {
+			b.add("{");
+			b.indent++;
+		};
+		//
 		return [
-			"%s" => arg(function(b:GenBuf, val:Any, i:Int) b.addString(val)),
-			"%b" => arg(function(b:GenBuf, val:Any, i:Int) b.addBuffer(val)),
-			"%d" => arg(function(b:GenBuf, val:Any, i:Int) b.addInt(val)),
-			"%|" => simple(function(b:GenBuf, val:Any, i:Int) b.addLine(0)),
-			"%+" => simple(function(b:GenBuf, val:Any, i:Int) b.addLine(1)),
-			"%-" => simple(function(b:GenBuf, val:Any, i:Int) b.addLine( -1)),
-			"%{" => simple(function(b:GenBuf, val:Any, i:Int) {
-				b.add("{");
-				b.indent++;
-			}),
+			"%s" => arg(arg_s),
+			"%b" => arg(arg_b),
+			"%d" => arg(arg_d),
+			"%|" => simple(sim_line),
+			"%+" => simple(sim_inc),
+			"%-" => simple(sim_dec),
+			"%{" => simple(sim_open),
 		];
 	})();
 	

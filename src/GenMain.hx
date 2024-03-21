@@ -1,7 +1,7 @@
 package;
 import ext.GenExt;
-import ext.GenExt1;
-import ext.GenExt2;
+import ext.gen.GenExtGMX;
+import ext.gen.GenExtYY;
 import ext.GenFileSys;
 import haxe.CallStack;
 import haxe.io.Path;
@@ -29,10 +29,10 @@ class GenMain {
 		switch (Path.extension(path).toLowerCase()) {
 			case "yy":
 				v2 = true;
-				extension = new GenExt2(fname, fs);
+				extension = GenExtYY.create(fname, fs);
 			default:
 				v2 = false;
-				extension = new GenExt1(fname, fs);
+				extension = new GenExtGMX(fname, fs);
 		};
 	}
 	public static function proc(filter:Array<String>, path:String) {

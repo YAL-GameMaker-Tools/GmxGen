@@ -1,0 +1,10 @@
+{
+  "FolderOrderSettings": [],
+  "ResourceOrderSettings": [
+    {"name":"trace","order":1,"path":"scripts/trace/trace.yy",},
+    {"name":"fnt_test","order":1,"path":"fonts/fnt_test/fnt_test.yy",},
+    {"name":"obj_test","order":1,"path":"objects/obj_test/obj_test.yy",},
+    {"name":"rm_test","order":1,"path":"rooms/rm_test/rm_test.yy",},
+    {"name":"GmxGenTest","order":1,"path":"extensions/GmxGenTest/GmxGenTest.yy",},
+  ],
+}

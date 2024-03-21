@@ -19,15 +19,13 @@ class GenGml extends GenFile {
 		super();
 		funcKind = 2;
 	}
-	/**
-	This changes
-	// GMS >= 2.3
-	code for newer versions
-	/*\/
-	code for older versions
-	//*\/
-	to match current target
-	**/
+	// This changes bits like
+	//  // GMS >= 2.3
+	//  code for newer versions
+	//  /*/
+	//  code for older versions
+	//  //*/
+	// to match the current target
 	override public function patch(code:String):String {
 		var changed = false;
 		code = (new EReg("/([/*])(" // -> prefix, line without prefix

@@ -38,14 +38,13 @@ class GenJS extends GenFile {
 		}
 		
 		if (!docHide) {
-			var cb = new GenBuf();
-			cb.addFormat("%s(%s)", fn.name, docArgs != null ? docArgs : argData);
-			if (docRet != null) cb.addString(docRet);
+			var comp = fn.name + "(" + (docArgs != null ? docArgs : argData) + ")";
+			if (docRet != null) comp += docRet;
 			if (docDesc != null && docDesc != "") {
-				if (!rxNosp.match(docDesc)) cb.addString(" : ");
-				cb.addString(docDesc);
+				if (!rxNosp.match(docDesc)) comp += " : ";
+				comp += docDesc;
 			}
-			fn.comp = cb.toString();
+			fn.comp = comp;
 		}
 		
 		if (docArgs != null && docArgs != "") argData = docArgs;

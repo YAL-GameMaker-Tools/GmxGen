@@ -1,4 +1,4 @@
-package ext;
+package ext.gen;
 import ext.GenMacro;
 import ext.IGenFileSys;
 import file.GenGml;
@@ -10,7 +10,7 @@ import yy.SfGmx;
  * ...
  * @author YellowAfterlife
  */
-class GenExt1 extends GenExt {
+class GenExtGMX extends GenExt {
 	public var root:SfGmx;
 	public function new(path:String, fs:IGenFileSys) {
 		super(path, fs);

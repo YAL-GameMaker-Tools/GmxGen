@@ -166,6 +166,7 @@ class GenCpp extends GenFile {
 		, "g");
 		//var rxEnumCtr = ~/([_a-zA-Z]\w*)(?:\s*=\s*(-?\d+|0x[0-9a-fA-F]+))?\s*(?:,|$)/g;
 		// `///\nenum Some { ... }`
+		// `///\nenum class Some : int { ... }`
 		new EReg("///.*?(~)?" // -> hide
 			+ "\n[ \t]*enum\\b\\s*"
 			+ "(?:(class)\\b\\s*)?" // -> class

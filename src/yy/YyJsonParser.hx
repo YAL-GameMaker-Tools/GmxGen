@@ -54,6 +54,7 @@ class YyJsonParser {
 				// loop
 			case '{'.code:
 				var obj = {}, field = null, comma : Null<Bool> = null;
+				var fieldArray = []; // +y
 				while( true ) {
 					var c = nextChar();
 					switch( c ) {
@@ -61,10 +62,12 @@ class YyJsonParser {
 						// loop
 					case '}'.code:
 						// if( field != null || comma == false ) invalidChar(); // +y: allowed
+						Reflect.setField(obj, "$hxOrder", fieldArray);
 						return obj;
 					case ':'.code:
 						if( field == null )
 							invalidChar();
+						fieldArray.push(field);
 						Reflect.setField(obj,field,parseRec());
 						field = null;
 						comma = true;

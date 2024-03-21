@@ -25,7 +25,7 @@ typedef YyExtensionFile = {
 }
 typedef YyExtensionFunc = {
 	>YyBase,
-	name:String,
+	?name:String,
 	externalName:String,
 	help:String,
 	args:Array<Int>,
@@ -33,6 +33,8 @@ typedef YyExtensionFunc = {
 	hidden:Bool,
 	kind:Int,
 	returnType:Int,
+	// GM2024
+	?documentation:String,
 }
 typedef YyExtensionMacro = {
 	>YyBase,
@@ -42,7 +44,11 @@ typedef YyExtensionMacro = {
 	value:String,
 }
 typedef YyBase = {
-	id:YyGUID,
-	modelName:String,
-	mvc:String,
+	// 2.2
+	?id:YyGUID,
+	?modelName:String,
+	?mvc:String,
+	// 2.3
+	?resourceType:String,
+	?resourceVersion:String,
 };
