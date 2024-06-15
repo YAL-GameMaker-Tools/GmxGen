@@ -7,6 +7,12 @@
 */extensions/*/*.dll
 */datafiles/GmxGenTest.html
 
+GmxGenTest_GM81/*.cpp
+GmxGenTest_GM81/*.cs
+GmxGenTest_GM81/*.dll
+GmxGenTest_GM81/*.gb1
+GmxGenTest_GM81/GmxGen.txt
+
 */Debug/
 */Release/
 Debug/

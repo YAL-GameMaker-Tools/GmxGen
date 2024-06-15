@@ -11,6 +11,7 @@ echo Running post-build for %config%
 set extName=GmxGenTest
 set dllName=GmxGenTest
 
+set gmlDir8=%solutionDir%GmxGenTest_GM81
 set gmlDir14=%solutionDir%GmxGenTest.gmx
 set gmlDir22=%solutionDir%GmxGenTest_GMS22
 set gmlDir23=%solutionDir%GmxGenTest_GMS23
@@ -18,6 +19,7 @@ set gmlDir2022=%solutionDir%GmxGenTest_GM2022
 set gmlDir2023=%solutionDir%GmxGenTest_GM2023
 set gmlDir2024=%solutionDir%GmxGenTest_GM2024
 
+set ext8=%gmlDir8%
 set ext14=%gmlDir14%\extensions\%extName%
 set ext22=%gmlDir22%\extensions\%extName%
 set ext23=%gmlDir23%\extensions\%extName%
@@ -46,10 +48,15 @@ set copyRest=--copy "%dllPath%" "%dllRel%:%arch%" ^
 --copy "%jsPath%" "*.js" ^
 --copy "%gmlPath%" "*.gml"
 
+set copyRest=--copy "%dllPath%" "%dllRel%:%arch%" ^
+--copy "%cppPath%" "%cppRel%" ^
+--copy "%gmlPath%" "*.gml"
+
 neko %gmxgen% "%ext2023%\%extName%.yy" %copyRest%
 neko %gmxgen% "%ext2022%\%extName%.yy" %copyRest%
 neko %gmxgen% "%ext23%\%extName%.yy" %copyRest%
 neko %gmxgen% "%ext22%\%extName%.yy" %copyRest%
 neko %gmxgen% "%ext14%.extension.gmx" %copyRest%
+neko %gmxgen% "%ext8%\GmxGen.gmxgen81" %copyRest%
 exit 0
 :bye

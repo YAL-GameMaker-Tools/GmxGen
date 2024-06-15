@@ -1,5 +1,6 @@
 package;
 import ext.GenExt;
+import ext.gen.GenExtGMK;
 import ext.gen.GenExtGMX;
 import ext.gen.GenExtYY;
 import ext.GenFileSys;
@@ -27,6 +28,9 @@ class GenMain {
 		fs.dryRun = dryRun;
 		var fname = Path.withoutDirectory(path);
 		switch (Path.extension(path).toLowerCase()) {
+			case "gmxgen81":
+				v2 = false;
+				extension = new GenExtGMK(fname, fs);
 			case "yy":
 				v2 = true;
 				extension = GenExtYY.create(fname, fs);
@@ -59,7 +63,6 @@ class GenMain {
 		return paths;
 	}
 	public static function mainImpl(args:Array<String>) {
-		var watch = args.remove("--watch");
 		//
 		inline function procRemap(arr:Array<GenRemap>, from:String, to:String):Void {
 			try {
@@ -68,13 +71,19 @@ class GenMain {
 				Sys.println("Couldn't process remap: " + x);
 			}
 		}
+		//
+		var watch = args.remove("--watch");
+		GenOpt.stripCC = args.remove("--strip-cc");
+		GenOpt.disableIncompatible = args.remove("--disable-incompatible");
+		dryRun = args.remove("--dry");
+		//
 		var i = 0;
 		while (i < args.length) {
 			var del = switch (args[i]) {
 				case "--remap": procRemap(remaps, args[i + 1], args[i + 2]); 3;
 				case "--copy": GenCopy.add(args[i + 1], args[i + 2]); 3;
 				case "--helper-prefix": GenOpt.helperPrefix = args[i + 1]; 2;
-				case "--dry": dryRun = true; 1;
+				case "--gmk-loader": GenOpt.gmkLoader = args[i + 1]; 2;
 				default: 0;
 			}
 			if (del > 0) {

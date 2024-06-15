@@ -3,8 +3,11 @@ import ext.GenFunc;
 import ext.GenMacro;
 import ext.GenType;
 import file.GenFile;
+import file.GenGmlAutofix;
+import file.GenGmlUnused;
 import tools.CharCode;
 import tools.GenReader;
+import tools.StringWithFlag;
 using tools.GenTools;
 using StringTools;
 
@@ -20,44 +23,127 @@ class GenGml extends GenFile {
 		funcKind = 2;
 	}
 	// This changes bits like
-	//  // GMS >= 2.3
+	//  // GMS >= 2.3:
 	//  code for newer versions
 	//  /*/
 	//  code for older versions
 	//  //*/
 	// to match the current target
-	override public function patch(code:String):String {
-		var changed = false;
-		code = (new EReg("/([/*])(" // -> prefix, line without prefix
+	override public function patch(_code:String):String {
+		var sf = new StringWithFlag(_code);
+		var rsOp = "\\s*(==|!=|\\>=|\\>|\\<=|\\<)";
+		var rsVer = "\\s*(\\d+(?:\\.[\\d*])?)";
+		var stripCC = GenOpt.stripCC;
+		var regex = (""
+			+ "/([/*])(" // -> prefix, line without prefix
 			+ "(?:\\s*\\()?" // opt. (
 			+ "\\s*GMS"
-			+ "\\s*(==|!=|>=|>|<=|<)" // -> operator
-			+ "\\s*(\\d+(?:\\.[\\d*]))" // -> version
+			+ rsOp // -> operator
+			+ rsVer // -> version
+			+ "(?:"
+				+ "\\s*(\\&\\&|\\|\\|)" // -> and/or
+				+ "\\s*GMS"
+				+ rsOp // -> operator2
+				+ rsVer // -> version2
+			+ ")?"
 			+ "(?:\\s*\\))?" // opt. )
-		+ ":)", "g")).map(code, function(rx:EReg) {
+			+ ":)" // trailing `:` (required!)
+		);
+		if (stripCC) {
+			regex += ("\\s*"
+				+ "([\\s\\S]*?)"
+				+ "\\*/(\\s*)"
+			);
+		}
+		sf.str = (new EReg(regex, "g")).map(sf.str, function(rx:EReg) {
 			var gr = 0;
 			var pre = rx.matched(++gr);
 			var line = rx.matched(++gr);
-			var op = rx.matched(++gr);
-			var verStr = rx.matched(++gr);
-			var ver = Std.parseFloat(verStr);
-			if (Math.isNaN(ver)) return rx.matched(0);
-			var active = switch (op) {
-				case "==": version == ver;
-				case "!=": version != ver;
-				case ">=": version >= ver;
-				case "<=": version <= ver;
-				case ">": version > ver;
-				case "<": version < ver;
-				default: false;
-			};
+			//
+			var op1 = rx.matched(++gr);
+			var verStr1 = rx.matched(++gr);
+			var ver1 = Std.parseFloat(verStr1);
+			//
+			var boolOp = rx.matched(++gr);
+			var op2 = rx.matched(++gr);
+			var verStr2 = rx.matched(++gr);
+			//
+			var inner = stripCC ? rx.matched(++gr) : null;
+			var post = stripCC ? rx.matched(++gr) : null;
+			//
+			if (Math.isNaN(ver1)) return rx.matched(0);
+			function check(v:Float, op:String) {
+				return switch (op) {
+					case "==": version == v;
+					case "!=": version != v;
+					case ">=": version >= v;
+					case "<=": version <= v;
+					case ">": version > v;
+					case "<": version < v;
+					default: false;
+				};
+			}
+			
+			var active;
+			if (boolOp != null) {
+				var ver2 = verStr2 != null ? Std.parseFloat(verStr2) : null;
+				if (Math.isNaN(ver2)) return rx.matched(0);
+				var a1 = check(ver1, op1);
+				var a2 = check(ver2, op2);
+				active = switch (boolOp) {
+					case "&&": a1 && a2;
+					case "||": a1 || a2;
+					default: false;
+				}
+			} else {
+				active = check(ver1, op1);
+			}
+			
+			if (stripCC) {
+				sf.flag = true;
+				if (!active) return "";
+				inner = inner.rtrim();
+				if (inner.endsWith("//")) {
+					inner = inner.substring(0, inner.length - 2).rtrim();
+				} else if (inner.endsWith("/")) {
+					inner = inner.substring(0, inner.length - 1).rtrim() + "/*//";
+				}
+				return inner + post;
+			}
+			
 			var np = (active ? "//" : "/*");
 			if (np != pre) {
-				changed = true;
+				sf.flag = true;
 				return np + line;
 			} else return rx.matched(0);
 		});
-		return changed ? code : null;
+		
+		if (stripCC && sf.flag) {
+			var blockStart = "/*//";
+			var blockStartL = blockStart.length;
+			for (_ in 0 ... 1024) {
+				var pos = sf.str.indexOf(blockStart);
+				if (pos < 0) break;
+				var end = sf.str.indexOf("*/", pos + blockStartL);
+				if (end < 0) break;
+				sf.str = sf.str.substring(0, pos).rtrim()
+					+ sf.str.substring(end + 2);
+			}
+			
+			var blockEnd = "//*/";
+			var blockEndL = blockEnd.length;
+			for (_ in 0 ... 1024) {
+				var pos = sf.str.indexOf(blockEnd);
+				if (pos < 0) break;
+				sf.str = sf.str.substring(0, pos).rtrim()
+					+ sf.str.substring(pos + blockEndL);
+			}
+		}
+		
+		GenGmlUnused.patch(sf);
+		GenGmlAutofix.proc(sf);
+		
+		return sf.flag ? sf.str : null;
 	}
 	override public function scan(code:String) {
 		super.scan(code);
