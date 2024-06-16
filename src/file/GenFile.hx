@@ -19,17 +19,29 @@ class GenFile {
 	
 	public var functionList:Array<GenFunc> = [];
 	public var functionMap:Map<String, GenFunc> = new Map();
+	
+	/** Only used for 8.x interop via external_call, not added to definitions **/
+	public var gmkiFunctionList:Array<GenFunc> = [];
+	public var gmkiFunctionMap:Map<String, GenFunc> = new Map();
+	
 	public var initFunction:String = null;
 	public var finalFunction:String = null;
 	public function addFunction(f:GenFunc) {
-		var of = functionMap[f.name];
+		var list = functionList;
+		var map = functionMap;
+		static var rxGMKB = ~/#gmki\b/;
+		if (f.comp != null && rxGMKB.match(f.comp)) {
+			list = gmkiFunctionList;
+			map = gmkiFunctionMap;
+		}
+		var of = map[f.name];
 		if (of != null) {
 			if (of.comp == null && f.comp != null) {
-				functionList.remove(of);
+				list.remove(of);
 			} else return;
 		}
-		functionList.push(f);
-		functionMap[f.name] = f;
+		list.push(f);
+		map[f.name] = f;
 	}
 	
 	public var macroList:Array<GenMacro> = [];

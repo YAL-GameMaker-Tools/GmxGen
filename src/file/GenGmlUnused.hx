@@ -10,6 +10,7 @@ using StringTools;
  * @author YellowAfterlife
  */
 class GenGmlUnused {
+	public static var usedMap:Map<String, Bool> = new Map();
 	public static function patch(snip:StringWithFlag){
 		if (GenGml.version >= 1) return;
 		var code = snip.str;
@@ -82,6 +83,11 @@ class GenGmlUnused {
 							badList.push(word);
 						}
 						ok = false;
+					} else {
+						q.skipLineSpaces();
+						if (q.peek() == "(".code) {
+							if (!usedMap.exists(word)) usedMap[word] = true;
+						}
 					}
 			}
 		}

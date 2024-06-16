@@ -1,5 +1,6 @@
 package ext.gen;
 
+import file.GenGmlUnused;
 import ext.GenExt;
 import ext.GenLog;
 import ext.IGenFileSys;
@@ -60,14 +61,17 @@ class GenExtGMK extends GenExt {
 		for (file in files) {
 			if (Path.extension(file.fname).toLowerCase() != "dll") continue;
 			var hasPath = false;
-			for (func in file.functionList) {
+			var gmkiList = file.gmkiFunctionList;
+			for (list in [file.functionList, gmkiList])
+			for (func in list) {
 				if (!hasPath) {
 					hasPath = true;
 					if (!hasHeader) {
 						hasHeader = true;
-						init.addFormat("var _path;%|");
+						init.addFormat("var _path, _dir;%|");
+						init.addFormat('_dir = "";%|');
 					}
-					init.addFormat('%|_path = "%s";%|', file.fname);
+					init.addFormat('%|_path = _dir + "%s";%|', file.fname);
 				}
 				init.addFormat("global.f_%s = external_define(_path, ", func.name);
 				init.addFormat('"%s", ', func.extName); // external name
@@ -78,6 +82,13 @@ class GenExtGMK extends GenExt {
 					init.addFormat(', %s', arg.toTy());
 				}
 				init.addFormat(");%|");
+				//
+				if (list == gmkiList) continue;
+				// could maybe hide auto-generated functions later
+				if (func.comp == null
+					&& func.name.endsWith("_raw")
+					&& !GenGmlUnused.usedMap.exists(func.name)
+				) continue;
 				//
 				impl.addFormat("%|#define %s%|", func.name);
 				if (func.comp != null) impl.addFormat('/// %s%|', func.comp);
@@ -100,7 +111,7 @@ class GenExtGMK extends GenExt {
 		// add other GML files:
 		for (file in files) {
 			if (Path.extension(file.fname).toLowerCase() != "gml") continue;
-			init.addFormat("// %s:%|%s%|", file.fname, fs.getContent(file.relPath));
+			init.addFormat("%|%s", fs.getContent(file.relPath));
 		}
 		
 		init.addBuffer(impl);
