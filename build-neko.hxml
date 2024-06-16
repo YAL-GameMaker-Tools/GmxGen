@@ -1,3 +1,4 @@
 -cp src
 -main GenMain
 -neko bin/GmxGen.n
+--cmd nekotools boot bin/GmxGen.n
