@@ -1,4 +1,5 @@
 package tools;
+import file.GenGml;
 import haxe.Rest;
 
 /**
@@ -10,7 +11,11 @@ class GenBuf extends StringBuf {
 	public function addLine(d:Int = 0) {
 		indent += d;
 		addChar("\n".code);
-		for (_ in 0 ... indent) addChar("\t".code);
+		if (GenGml.version < 2) {
+			for (_ in 0 ... indent) addString("    ");
+		} else {
+			for (_ in 0 ... indent) addChar("\t".code);
+		}
 	}
 	
 	public inline function addString(s:String) add(s);
@@ -31,7 +36,7 @@ class GenBuf extends StringBuf {
 		//
 		function sim_line(b:GenBuf, val:Any, i:Int) b.addLine(0);
 		function sim_inc(b:GenBuf, val:Any, i:Int) b.addLine(1);
-		function sim_dec(b:GenBuf, val:Any, i:Int) b.addLine(1);
+		function sim_dec(b:GenBuf, val:Any, i:Int) b.addLine(-1);
 		function sim_open(b:GenBuf, val:Any, i:Int) {
 			b.add("{");
 			b.indent++;

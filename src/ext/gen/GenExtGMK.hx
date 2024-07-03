@@ -51,11 +51,11 @@ class GenExtGMK extends GenExt {
 		if (funcFilePath != null) {
 			var initName = GenOpt.gmkLoader;
 			if (initName == null) {
-				Path.withoutExtension(funcFilePath);
+				initName = Path.withoutExtension(funcFilePath);
 				initName = ~/\W+/g.replace(initName, "");
 			}
 			init.addFormat("#define %s%|", initName);
-			init.addFormat("/// %s()%|", initName);
+			init.addFormat('/// %s(?path_prefix)%|', initName);
 		}
 		var hasHeader = false;
 		for (file in files) {
@@ -69,7 +69,9 @@ class GenExtGMK extends GenExt {
 					if (!hasHeader) {
 						hasHeader = true;
 						init.addFormat("var _path, _dir;%|");
-						init.addFormat('_dir = "";%|');
+						init.addFormat("if (argument_count > 0) {%+");
+							init.addFormat('_dir = argument[0];%-');
+						init.addFormat('} else _dir = "";%|');
 					}
 					init.addFormat('%|_path = _dir + "%s";%|', file.fname);
 				}
