@@ -41,6 +41,8 @@ class GenGmlUnused {
 				snip = snip.replace("*/", "*\\/");
 				out.addString(snip);
 				out.addString("*/");
+				badList = [];
+				badMap = new Map();
 				start = till;
 				changed = true;
 			}

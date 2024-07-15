@@ -59,6 +59,10 @@ class GenExtGMK extends GenExt {
 		}
 		var hasHeader = false;
 		for (file in files) {
+			for (mcr in file.macroList) {
+				const.addFormat("%s=%s%|", mcr.name, mcr.value);
+			}
+			
 			if (Path.extension(file.fname).toLowerCase() != "dll") continue;
 			var hasPath = false;
 			var gmkiList = file.gmkiFunctionList;
@@ -99,9 +103,6 @@ class GenExtGMK extends GenExt {
 					impl.addFormat(', argument%d', i);
 				}
 				impl.addFormat(");%|");
-			}
-			for (mcr in file.macroList) {
-				const.addFormat("%s=%s%|", mcr.name, mcr.value);
 			}
 		} // for file in files
 		// add inits:
