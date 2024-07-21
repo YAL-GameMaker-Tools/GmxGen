@@ -46,6 +46,25 @@ class GenExtForGM2023x extends GenExtForGMS23x {
 				extFile.functions.push(extFunc);
 			}
 			//
+			extFile.constants.resize(0);
+			for (mcr in file.macroList) {
+				var extMacro:YyExtensionMacro = {
+					hidden: mcr.hide,
+					name: mcr.name,
+					value: mcr.value,
+				}
+				if (hasDollarType) {
+					Reflect.setField(extMacro, "$GMExtensionConstant", "");
+					Reflect.setField(extMacro, "%Name", extMacro.name);
+				}
+				if (hasResourceType) {
+					extMacro.resourceType = "GMExtensionConstant";
+					extMacro.resourceVersion = yyVersion;
+					extMacro.name = extMacro.name;
+				}
+				extFile.constants.push(extMacro);
+			}
+			//
 			var fields = Reflect.fields(extFile);
 			out.sortFields(fields);
 			out.objectOpen();
