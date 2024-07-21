@@ -1,4 +1,5 @@
 package file;
+import tools.GenReader;
 import ext.GenFunc;
 import ext.GenMacro;
 import ext.GenType;
@@ -37,6 +38,8 @@ class GenCpp extends GenFile {
 		var rxArg = ~/^\s*(.+?)\s*(\w+)\s*$/g; // 1: is non-pointer, 2: name
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
+				+ "(?:" + "(\\w+)" + "[ \t]*)?" // -> name override (opt.)
+				+ "(?:" + "\\(" + ".*?" + "\\)" + ")?" // (args) (discard)
 				+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
 				+ "(.*)" // -> doc
 			+ "\n)?"
@@ -47,13 +50,15 @@ class GenCpp extends GenFile {
 		+ "", "gm").each(code, function(rx:EReg) {
 			var i = 0;
 			var hasDoc = rx.matched(++i) != null;
+			var docName = rx.matched(++i);
 			var docType = rx.matched(++i);
 			var doc = rx.matched(++i);
 			var retType = rx.matched(++i);
 			var name = rx.matched(++i);
 			var argData = rx.matched(++i).trim();
 			var fn = new GenFunc(name, rx.matchedPos().pos);
-			if (hasDoc) fn.comp = name + "(";
+			if (docName != null) fn.name = docName;
+			if (hasDoc) fn.comp = fn.name + "(";
 			
 			var argPairs = [];
 			if (argData.trim() != "") {
@@ -136,12 +141,7 @@ class GenCpp extends GenFile {
 			addFunction(fn);
 		});
 	}
-	override public function scan(code:String):Void {
-		super.scan(code);
-		
-		scanUnmangled(code);
-		scanMangled(code);
-		
+	function scanMacros(code:String) {
 		// `///\n#define name value`
 		new EReg("///.*?(~)?\n" // -> hide
 			+ "[ \t]*#define"
@@ -155,7 +155,8 @@ class GenCpp extends GenFile {
 			var pos = rx.matchedPos().pos;
 			addMacro(new GenMacro(name, value, hide, pos));
 		});
-		
+	}
+	function scanEnums(code:String) {
 		var rxEnumCtr = new EReg(
 			"([_a-zA-Z]\\w*)" // -> name
 			+ "(?:"
@@ -190,7 +191,8 @@ class GenCpp extends GenFile {
 				next = curr + 1;
 			});
 		});
-		
+	}
+	function scanStructs(code:String) {
 		var autoStructs = false;
 		~/\/\/\/[ \t]*@autostruct\b[ \t]*(.+)/.each(code, function(rx:EReg) {
 			autoStructs = true;
@@ -203,5 +205,58 @@ class GenCpp extends GenFile {
 			}
 		});
 		if (!autoStructs) GenCppStructOffsets.scanStructOffsets(this, code);
+	}
+	function scanBlock(code:String) {
+		scanUnmangled(code);
+		scanMangled(code);
+		scanMacros(code);
+		scanEnums(code);
+		scanStructs(code);
+	}
+	function scanOutsideBlockComments(code:String, fn:String->Void) {
+		var q = new GenReader(code, "");
+		var start = 0;
+		inline function flush(till:Int) {
+			if (start >= till) return;
+			fn(code.substring(start, till));
+		}
+		while (q.loop) {
+			var c = q.read();
+			switch (c) {
+				case '/'.code: {
+					switch (q.peek()) {
+						case '/'.code: {
+							while (q.loop) {
+								if (q.peek() == '\n'.code) break;
+								q.skip();
+							}
+						};
+						case '*'.code: {
+							q.skip();
+							flush(q.pos);
+							while (q.loop) {
+								if (q.peek() == '*'.code && q.peekAt(1) == '/'.code) {
+									q.skip(2);
+									start = q.pos;
+									break;
+								} else q.skip();
+							}
+						};
+					}
+				}; // /
+				case '"'.code: {
+					while (q.loop) {
+						c = q.read();
+						if (c == '"'.code) break;
+						if (c == '\\'.code) q.skip();
+					}
+				};
+			}
+		}
+		flush(q.pos);
+	}
+	override public function scan(code:String):Void {
+		super.scan(code);
+		scanOutsideBlockComments(code, scanBlock);
 	}
 }
