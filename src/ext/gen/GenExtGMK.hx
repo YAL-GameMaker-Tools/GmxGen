@@ -48,6 +48,7 @@ class GenExtGMK extends GenExt {
 		var init = new GenBuf();
 		var impl = new GenBuf();
 		var const = new GenBuf();
+		var globalvars = [];
 		if (funcFilePath != null) {
 			var initName = GenOpt.gmkLoader;
 			if (initName == null) {
@@ -57,12 +58,28 @@ class GenExtGMK extends GenExt {
 			init.addFormat("#define %s%|", initName);
 			init.addFormat('/// %s(?path_prefix)%|', initName);
 		}
-		var hasHeader = false;
+		// collect macros:
 		for (file in files) {
 			for (mcr in file.macroList) {
-				const.addFormat("%s=%s%|", mcr.name, mcr.value);
+				if (mcr.value == "global.g_" + mcr.name) {
+					globalvars.push(mcr.name);
+				} else const.addFormat("%s=%s%|", mcr.name, mcr.value);
 			}
-			
+		}
+		// collect functions:
+		var hasHeader = false;
+		function ensureHeader() {
+			if (hasHeader) return;
+			hasHeader = true;
+			init.addFormat("var _path, _dir;%|");
+			init.addFormat("if (argument_count > 0) {%+");
+				init.addFormat('_dir = argument[0];%-');
+			init.addFormat('} else _dir = "";%|');
+			if (globalvars.length > 0) {
+				init.addFormat("globalvar %s;%|", globalvars.join(", "));
+			}
+		}
+		for (file in files) {
 			if (Path.extension(file.fname).toLowerCase() != "dll") continue;
 			var hasPath = false;
 			var gmkiList = file.gmkiFunctionList;
@@ -70,15 +87,10 @@ class GenExtGMK extends GenExt {
 			for (func in list) {
 				if (!hasPath) {
 					hasPath = true;
-					if (!hasHeader) {
-						hasHeader = true;
-						init.addFormat("var _path, _dir;%|");
-						init.addFormat("if (argument_count > 0) {%+");
-							init.addFormat('_dir = argument[0];%-');
-						init.addFormat('} else _dir = "";%|');
-					}
+					ensureHeader();
 					init.addFormat('%|_path = _dir + "%s";%|', file.fname);
 				}
+				//init.addFormat('trace("Loading %s:%s");%|', file.fname, func.extName);
 				init.addFormat("global.f_%s = external_define(_path, ", func.name);
 				init.addFormat('"%s", ', func.extName); // external name
 				init.addFormat('dll_cdecl, '); // call convention
@@ -108,18 +120,22 @@ class GenExtGMK extends GenExt {
 		// add inits:
 		for (file in files) {
 			if (file.initFunction != null && file.initFunction != "") {
+				ensureHeader();
 				init.addFormat("%s();%|", file.initFunction);
 			}
 		}
 		// add other GML files:
 		for (file in files) {
 			if (Path.extension(file.fname).toLowerCase() != "gml") continue;
+			ensureHeader();
 			init.addFormat("%|%s", fs.getContent(file.relPath));
 		}
 		
 		init.addBuffer(impl);
 		if (funcFilePath != null) {
-			fs.setContent(funcFilePath, init.toString());
+			var gml = init.toString();
+			gml = gml.replace("\r", "").replace("\n", "\r\n");
+			fs.setContent(funcFilePath, gml);
 		} else if (init.length > 0) {
 			GenLog.warn('GmxGen: warning #: Extension contains external functions, but no >.gml file has been specified.');
 		}
