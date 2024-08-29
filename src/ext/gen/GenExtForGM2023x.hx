@@ -20,6 +20,8 @@ class GenExtForGM2023x extends GenExtForGMS23x {
 		for (file in files) {
 			if (sep) out.addLine(); else sep = true;
 			var extFile:YyExtensionFile = file.data;
+			extFile.init = file.initFunction ?? "";
+			Reflect.setField(extFile, "final", file.finalFunction ?? "");
 			var hasResourceType = extFile.resourceType != null;
 			//
 			extFile.functions.resize(0);
