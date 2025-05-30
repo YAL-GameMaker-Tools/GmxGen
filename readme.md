@@ -4,19 +4,11 @@ This small program takes a .extension.gmx (GMS1) or .yy (GMS2) file and updates 
 So, instead of tinkering with the little pop-up menus for defining functions and macros per extension file, you can hint them in your files
 
 ## Building
-**Note:** There are also pre-built binaries in Releases.
-
 Neko VM (note: if you didn't install it together with Haxe, get it from [the website](https://nekovm.org/)):
 ```
 haxe build-neko.hxml
 nekotools boot bin/GmxGen.n
 ```
-For C# (note: do `haxelib install hxcs` first if you've never used Haxe➜C# before):
-```bat
-haxe build-cs.hxml
-copy /Y GmxGen.NET\bin\GenMain.exe bin\GmxGen.exe
-```
-_Or_: Open the included HXPROJ using a [development version](https://flashdevelop.org/downloads/builds/) of HaxeDevelop and press Build Project (F8)
 
 ## Usage
 ```
