@@ -26,15 +26,34 @@ class GenCpp extends GenFile {
 			fn.argTypes.push(argp.type == "double" ? GenType.Value : GenType.Pointer);
 		}
 	}
-	function scanUnmangled(code:String):Void {
+	var dllExport = "dllx";
+	var dllExportM = "dllm";
+	function scanBlockPre(code:String) {
 		// `/// doc\nDLLEXPORT double func(double arg)` -> visible
 		// `DLLEXPORT char*(some* arg)` -> hidden
-		var dllExport = "dllx";
-		~/#define\s+(\w+)\s+extern\s+"C"\s+__declspec\(dllexport\)[ \t]*$/gm
-		.each(code, function(rx:EReg) {
+		var rgSpace = "[ \t]";
+		var rxDllExport = new EReg("#define"
+			+ rgSpace+'+' + "(\\w+)"
+			+ rgSpace+'+' + "extern"
+			+ rgSpace+'*' + '"C"'
+			+ rgSpace+'*' + "__declspec"
+			+ rgSpace+'*' + "\\("
+			+ rgSpace+'*' + "dllexport"
+			+ rgSpace+'*' + "\\)"
+			+ rgSpace+'*'
+			+ "\r?"
+			+ "(?:\n|$)"
+		+ "", "g");
+		rxDllExport.each(code, function(rx:EReg) {
 			dllExport = rx.matched(1);
 		});
 		
+		var rxDllExportM = ~/#define\s+(\w+)\s+__declspec\(dllexport\)[ \t]*$/gm;
+		rxDllExportM.each(code, function(rx:EReg) {
+			dllExportM = rx.matched(1);
+		});
+	}
+	function scanUnmangled(code:String):Void {
 		var rxArg = ~/^\s*(.+?)\s*(\w+)\s*$/g; // 1: is non-pointer, 2: name
 		new EReg("(" // -> hasDoc
 				+ "///[ \t]*"
@@ -86,11 +105,6 @@ class GenCpp extends GenFile {
 		});
 	}
 	function scanMangled(code:String):Void {
-		var dllExport2 = "dllm";
-		~/#define\s+(\w+)\s+__declspec\(dllexport\)[ \t]*$/gm
-		.each(code, function(rx:EReg) {
-			dllExport2 = rx.matched(1);
-		});
 		var argMacro = "dllm_args";
 		new EReg("#define\\s+(\\w+)"
 			+ "\\s+" + "RValue" + "\\s*" + "[\\*&]" + "\\s*" + "\\w+" + "\\s*," // result
@@ -109,7 +123,7 @@ class GenCpp extends GenFile {
 			+ "(?:(\\-\\>.+?)(?:$|:))?" // -> type
 			+ "(.*)" // -> doc
 			+ "\n[ \t]*)?"
-			+ dllExport2
+			+ dllExportM
 			+ "[ \t]*void"
 			+ "[ \t]*(\\w+)" // -> name
 			+ "[ \t]*\\("
@@ -213,12 +227,13 @@ class GenCpp extends GenFile {
 		scanEnums(code);
 		scanStructs(code);
 	}
-	function scanOutsideBlockComments(code:String, fn:String->Void) {
+	function scanOutsideBlockComments(code:String) {
 		var q = new GenReader(code, "");
 		var start = 0;
+		var blocks = [];
 		inline function flush(till:Int) {
 			if (start >= till) return;
-			fn(code.substring(start, till));
+			blocks.push(code.substring(start, till));
 		}
 		while (q.loop) {
 			var c = q.read();
@@ -254,9 +269,12 @@ class GenCpp extends GenFile {
 			}
 		}
 		flush(q.pos);
+		return blocks;
 	}
 	override public function scan(code:String):Void {
 		super.scan(code);
-		scanOutsideBlockComments(code, scanBlock);
+		var blocks = scanOutsideBlockComments(code);
+		for (block in blocks) scanBlockPre(block);
+		for (block in blocks) scanBlock(block);
 	}
 }
